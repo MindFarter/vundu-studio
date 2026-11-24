@@ -1,0 +1,4 @@
+__pycache__/
+*.pyc
+.vundu-studio/
+*.zip

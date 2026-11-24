@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark"><head><meta charset="utf-8"><title>Vundu Studio</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<script>try{var m=location.hash.match(/theme=(dark|light)/);var t=(m&&m[1])||localStorage.getItem('vundu-theme')||(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');document.documentElement.dataset.theme=t}catch(e){}</script>
+<style>
+:root{--mono:ui-monospace,"JetBrains Mono","Cascadia Code","Fira Code",Menlo,Consolas,monospace;--sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+[data-theme=dark]{--bg:#1e1e1e;--bg2:#252526;--bg3:#2d2d30;--bar:#181818;--ink:#d4d4d4;--mute:#8b8b8b;--line:#3c3c3c;--acc:#4da3ff;--accbg:#0e639c;--ok:#4ec9b0;--bad:#f48771;--warn:#e5c07b;--sel:#37373d;--term:#141414;--termink:#cccccc;--cmd:#4da3ff;--inbg:#3c3c3c}
+[data-theme=light]{--bg:#ffffff;--bg2:#f3f3f3;--bg3:#ececec;--bar:#e8e8e8;--ink:#24292f;--mute:#6a737d;--line:#d4d4d4;--acc:#0b63c4;--accbg:#0b63c4;--ok:#1a7f5a;--bad:#c62f2f;--warn:#9a6700;--sel:#e4e6e8;--term:#f8f8f8;--termink:#24292f;--cmd:#0b63c4;--inbg:#ffffff}
+*{box-sizing:border-box}html,body{height:100%;margin:0}
+body{font:13.5px/1.5 var(--sans);background:var(--bg);color:var(--ink);overflow:hidden}
+#app{display:grid;grid-template-rows:36px 1fr auto 24px;height:100vh}
+#title{display:flex;align-items:center;gap:12px;padding:0 12px;background:var(--bar);border-bottom:1px solid var(--line)}
+#title .logo{font-family:var(--mono);font-weight:700;color:var(--acc);letter-spacing:.5px}
+#title .ver{font-family:var(--mono);font-size:11px;color:var(--mute)}
+#title .sp{flex:1}#themebtn{padding:2px 10px;font-size:12px;height:26px}
+#body{display:grid;grid-template-columns:52px auto 1fr;min-height:0}
+#rail{background:var(--bar);border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;padding-top:6px;gap:2px}
+.rb{width:52px;height:50px;background:none;border:0;border-left:2px solid transparent;color:var(--mute);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font:10px var(--sans);position:relative}
+.rb:hover{color:var(--ink)}.rb.on{color:var(--ink);border-left-color:var(--acc);background:var(--bg2)}
+.rb svg{width:22px;height:22px}.badge{position:absolute;top:5px;right:7px;background:var(--bad);color:#fff;font-size:9px;border-radius:8px;padding:0 5px;line-height:15px}
+#side{width:250px;background:var(--bg2);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+#side.hide{display:none}
+.sh{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;font:600 11px var(--sans);letter-spacing:.8px;color:var(--mute);text-transform:uppercase}
+#plist{overflow:auto;flex:1}
+.pi{display:flex;align-items:center;gap:9px;padding:6px 12px;cursor:pointer;border-left:2px solid transparent}
+.pi:hover{background:var(--sel)}.pi.on{background:var(--sel);border-left-color:var(--acc)}
+.pi img,.pi .ph{width:22px;height:22px;border-radius:4px;object-fit:cover;background:var(--line);flex:none}
+.pi b{font-weight:600;display:block;line-height:1.2}.pi small{color:var(--mute);font:11px var(--mono)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--warn);display:inline-block;margin-left:4px}
+#main{grid-column:3;display:flex;flex-direction:column;min-width:0;min-height:0;background:var(--bg)}
+#tabs{display:flex;background:var(--bg2);border-bottom:1px solid var(--line);overflow-x:auto;min-height:35px}
+.tab{padding:8px 16px;cursor:pointer;color:var(--mute);border-right:1px solid var(--line);border-top:2px solid transparent;white-space:nowrap;background:none;border-left:0;border-bottom:0;font:inherit}
+.tab:hover{color:var(--ink)}.tab.on{background:var(--bg);color:var(--ink);border-top-color:var(--acc)}
+#content{flex:1;overflow:auto;padding:22px 26px;min-height:0}
+.wrap{max-width:860px}
+h1{font-size:19px;margin:0 0 4px}h2{font-size:12px;margin:26px 0 10px;text-transform:uppercase;letter-spacing:.8px;color:var(--mute);font-weight:600;border-bottom:1px solid var(--line);padding-bottom:5px}
+.lead{color:var(--mute);margin:0 0 14px}.mono{font-family:var(--mono)}.mute{color:var(--mute)}.ok{color:var(--ok)}.bad{color:var(--bad)}.warn{color:var(--warn)}
+button{font:inherit;padding:5px 13px;background:var(--bg3);color:var(--ink);border:1px solid var(--line);border-radius:3px;cursor:pointer}
+button:hover:not(:disabled){border-color:var(--acc)}button:disabled{opacity:.45;cursor:default}
+button.primary{background:var(--accbg);border-color:var(--accbg);color:#fff}button.primary:hover:not(:disabled){filter:brightness(1.12)}
+button.ghost{background:none;border-color:transparent;color:var(--acc);padding:3px 6px}
+input[type=text],input:not([type]),select,textarea{width:100%;font:13px var(--mono);padding:6px 8px;background:var(--inbg);color:var(--ink);border:1px solid var(--line);border-radius:3px}
+input:focus,select:focus,textarea:focus{outline:1px solid var(--acc);border-color:var(--acc)}
+label.f{display:block;margin:12px 0 3px;font-size:12px;font-weight:600}.help{font-size:12px;color:var(--mute);margin-top:2px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}.grid3{display:grid;grid-template-columns:2fr 1fr 1fr;gap:0 16px}
+@media(max-width:900px){.grid2,.grid3{grid-template-columns:1fr}#side{width:200px}}
+.card{border:1px solid var(--line);background:var(--bg2);border-radius:4px;padding:14px 16px;margin-bottom:12px}
+.chip{display:inline-block;font:11px var(--mono);padding:1px 8px;border-radius:10px;border:1px solid var(--line);color:var(--mute)}
+.chip.ok{color:var(--ok);border-color:var(--ok)}.chip.bad{color:var(--bad);border-color:var(--bad)}.chip.warn{color:var(--warn);border-color:var(--warn)}
+table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}th{font:600 11px var(--sans);color:var(--mute);text-transform:uppercase;letter-spacing:.6px}
+td.ok,td.bad,td.warn{white-space:nowrap}a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:16px 0}
+.step{border:1px solid var(--line);background:var(--bg2);padding:12px;border-radius:4px}.step .n{font:700 20px var(--mono);color:var(--acc)}.step b{display:block}.step span{color:var(--mute);font-size:12px}
+.fmts{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.fmt{border:1px solid var(--line);background:var(--bg2);border-radius:4px;padding:12px;display:flex;gap:10px;align-items:flex-start}
+.fmt.dis{opacity:.7}.fmt input{margin-top:4px}.fmt b{font-family:var(--mono)}
+.kv{display:grid;grid-template-columns:130px 1fr;gap:4px 12px;font-size:13px}.kv dt{color:var(--mute)}.kv dd{margin:0;font-family:var(--mono)}
+.code{font:12px var(--mono);background:var(--term);color:var(--termink);border:1px solid var(--line);border-radius:3px;padding:8px 10px;white-space:pre-wrap;word-break:break-all;position:relative}
+.note{border-left:3px solid var(--acc);background:var(--bg2);padding:8px 12px;margin:10px 0;border-radius:0 3px 3px 0}.note.bad{border-color:var(--bad)}.note.ok{border-color:var(--ok)}.note.warn{border-color:var(--warn)}
+.sw{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
+#console{background:var(--term);border-top:1px solid var(--line);display:none;flex-direction:column;height:240px}
+#console.on{display:flex}#console.min{height:30px}#console.min #logbody{display:none}
+#chead{display:flex;align-items:center;gap:10px;padding:4px 12px;font:11px var(--mono);color:var(--mute);border-bottom:1px solid var(--line);text-transform:uppercase;letter-spacing:.6px;min-height:29px}
+#chead .sp{flex:1}#chead button{padding:0 8px;font-size:12px;background:none;border:0;color:var(--mute)}#chead button:hover{color:var(--ink)}
+#logbody div{white-space:pre-wrap}#logbody{flex:1;overflow:auto;margin:0;padding:8px 14px;font:12px/1.55 var(--mono);color:var(--termink);white-space:pre-wrap;word-break:break-word}
+.l-cmd{color:var(--cmd)}.l-sec{color:var(--warn);font-weight:700}.l-err{color:var(--bad)}.l-ok{color:var(--ok)}.l-dim{color:var(--mute)}
+#status{display:flex;align-items:center;gap:16px;padding:0 12px;background:var(--accbg);color:#fff;font:11px var(--mono)}
+#status a,#status button{color:#fff;background:none;border:0;padding:0;font:inherit;cursor:pointer}#status .sp{flex:1}
+.empty{text-align:center;color:var(--mute);padding:40px 10px}
+.copy{position:absolute;top:4px;right:4px;padding:1px 8px;font-size:11px}
+details summary{cursor:pointer;color:var(--acc);margin:8px 0}
+.row{display:flex;gap:8px;align-items:center}.row>*{flex:1}.row>button{flex:none}
+.tick{display:flex;gap:8px;align-items:center;margin:8px 0}.tick input{width:auto}
+</style></head><body>
+<div id="app">
+ <div id="title"><span class="logo">&lt;/&gt; VUNDU STUDIO</span><span class="ver" id="ver"></span><span class="sp"></span>
+  <button id="themebtn" onclick="toggleTheme()" title="Switch dark / light theme"></button></div>
+ <div id="body">
+  <nav id="rail"></nav>
+  <aside id="side"><div class="sh"><span>Projects</span><button class="ghost" onclick="openAdd()" title="Add project">+ Add</button></div><div id="plist"></div></aside>
+  <section id="main"><div id="tabs"></div><div id="content"></div></section>
+ </div>
+ <div id="console"><div id="chead"><span id="ctitle">Output</span><span class="sp"></span><button onclick="clearLog()">clear</button><button onclick="minLog()">_</button><button onclick="hideLog()">x</button></div><pre id="logbody"></pre></div>
+ <div id="status"><a href="#" onclick="go('setup');return false" id="st-setup"></a><span id="st-ver"></span><span class="sp"></span><span id="st-data"></span><button onclick="showLog()">Output</button></div>
+</div>
+<div id="dlgwrap" style="display:none;position:fixed;inset:0;background:#0008;align-items:center;justify-content:center;z-index:9"><div class="card" style="width:min(560px,94vw);max-height:80vh;overflow:auto;background:var(--bg)" id="dlg"></div></div>
+
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const api=async(m,u,b)=>{const r=await fetch(u,{method:m,headers:{'X-Vundu':'1','Content-Type':'application/json'},body:b?JSON.stringify(b):undefined});
+ const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||r.statusText);return j};
+const sz=n=>n>1e6?(n/1e6).toFixed(1)+' MB':Math.max(1,Math.round(n/1e3))+' KB';
+const I={projects:'<path d="M3 6h6l2 2h10v11H3z"/>',library:'<path d="M3 4h18v4H3zM5 8v12h14V8M9 12h6"/>',machines:'<path d="M4 4h16v6H4zM4 14h16v6H4zM8 7h.01M8 17h.01"/>',setup:'<path d="M12 3v12m0 0l-4-4m4 4l4-4M4 20h16"/>',
+ sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/>',moon:'<path d="M20 14.5A8 8 0 019.5 4 8 8 0 1020 14.5z"/>'};
+const svg=n=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${I[n]}</svg>`;
+let S={projects:[],cur:null,view:'projects',ptab:'overview',targets:null,setup:null,machine:null};
+let poll=null;
+
+/* ---------- theme ---------- */
+function paintTheme(){const t=document.documentElement.dataset.theme;$('#themebtn').innerHTML=`<span style="display:inline-flex;align-items:center;gap:6px"><span style="width:15px;height:15px;display:inline-block">${svg(t==='dark'?'sun':'moon')}</span>${t==='dark'?'Light':'Dark'} theme</span>`}
+function toggleTheme(){const t=document.documentElement.dataset.theme==='dark'?'light':'dark';document.documentElement.dataset.theme=t;try{localStorage.setItem('vundu-theme',t)}catch(e){}paintTheme()}
+
+/* ---------- console ---------- */
+function showLog(title){$('#console').classList.add('on');$('#console').classList.remove('min');if(title)$('#ctitle').textContent=title}
+function hideLog(){$('#console').classList.remove('on')}function minLog(){$('#console').classList.toggle('min')}function clearLog(){$('#logbody').textContent=''}
+const MAXDOM=3000;
+function lineClass(l){return /^\$ |^\[remote\] \$/.test(l)?'l-cmd':/^===|^== /.test(l)?'l-sec':/ERROR|COULD NOT|failed|FAILED|E: /.test(l)?'l-err':/^✔|complete/i.test(l)?'l-ok':/^\s*\(dry/.test(l)?'l-dim':''}
+function appendLog(lines){if(!lines.length)return;const b=$('#logbody');const near=b.scrollHeight-b.scrollTop-b.clientHeight<80;const f=document.createDocumentFragment();
+ lines.forEach(l=>{const d=document.createElement('div');d.className=lineClass(l);d.textContent=l;f.appendChild(d)});b.appendChild(f);
+ while(b.childNodes.length>MAXDOM)b.removeChild(b.firstChild);if(near)b.scrollTop=b.scrollHeight}
+function watch(job,title,done){showLog(title);clearLog();clearInterval(poll);let since=0,busy=false,errs=0;
+ const tick=async()=>{if(busy)return;busy=true;let j;try{j=await api('GET',`/api/jobs/${job}?since=${since}`);errs=0}catch(e){busy=false;if(++errs>=5){clearInterval(poll);appendLog(['== Lost contact with Vundu Studio (was it restarted?). Reload this page.'])}return}
+  if(j.dropped)appendLog([`... ${j.dropped} earlier lines not shown (the full log is saved with the release)`]);appendLog(j.lines);since=j.next;busy=false;
+  if(j.done){clearInterval(poll);done&&done(j)}};
+ poll=setInterval(tick,700);tick()}
+
+/* ---------- navigation ---------- */
+function rail(){const m=S.setup?S.setup.missing:0;
+ const b=(id,l)=>`<button class="rb ${S.view===id?'on':''}" onclick="go('${id}')" title="${l}">${svg(id)}${l}${id==='setup'&&m?`<span class="badge">${m}</span>`:''}</button>`;
+ $('#rail').innerHTML=b('projects','Projects')+b('library','Library')+b('machines','Machines')+b('setup','Setup');
+ $('#side').classList.toggle('hide',S.view!=='projects')}
+function go(v){S.view=v;if(v==='projects'&&!S.ptab)S.ptab='overview';render()}
+async function loadAll(){const [ps,tg,st]=await Promise.all([api('GET','/api/projects'),api('GET','/api/targets'),api('GET','/api/setup')]);S.projects=ps;S.targets=tg;S.setup=st;
+ $('#st-setup').innerHTML=st.missing?`<span style="color:#ffd27a">&#9888; Setup needed (${st.missing})</span>`:'&#10003; Ready';render()}
+function render(){rail();plist();
+ if(S.view==='projects')return projectView();if(S.view==='library')return libraryView();if(S.view==='machines')return machinesView();return setupView()}
+function tabs(list,cur,fn){$('#tabs').innerHTML=list.map(([id,l])=>`<button class="tab ${cur===id?'on':''}" onclick="${fn}('${id}')">${l}</button>`).join('')}
+function plist(){$('#plist').innerHTML=S.projects.map(p=>`<div class="pi ${S.cur===p.id?'on':''}" onclick="selProject('${p.id}')">${p.icon?`<img src="/api/projects/${p.id}/icon?${p.icon}">`:'<div class="ph"></div>'}<div><b>${esc(p.name)}${p.changed_since_release?'<span class="dot" title="Source changed since last build"></span>':''}</b><small>${esc(p.framework||p.kind)} ${esc(p.version)}</small></div></div>`).join('')||'<div class="empty">No projects yet</div>'}
+function selProject(id){S.cur=id;S.view='projects';S.ptab='overview';render()}
+function setPTab(t){S.ptab=t;projectView()}
+
+/* ---------- projects ---------- */
+const FW={electron:'Electron app',node:'Node.js app / server',pyinstaller:'Python app',nuitka:'Python app',cmake:'C/C++ (CMake) project'};
+function projectView(){const p=S.projects.find(x=>x.id===S.cur);
+ if(!p){tabs([['w','Welcome']],'w','');$('#content').innerHTML=`<div class="wrap"><h1>Welcome to Vundu Studio</h1><p class="lead">Turn your app into an installer people can double-click. Four easy steps:</p>
+ <div class="steps"><div class="step"><div class="n">1</div><b>Add your project</b><span>Pick the folder that holds your code.</span></div><div class="step"><div class="n">2</div><b>Check the details</b><span>Name, version and an icon.</span></div><div class="step"><div class="n">3</div><b>Press Build</b><span>Choose .deb, .exe or .pkg.</span></div><div class="step"><div class="n">4</div><b>Find it in Library</b><span>Every build is saved by version.</span></div></div>
+ ${S.setup&&S.setup.missing?`<div class="note warn"><b>First, a one-off setup.</b> Some tools are missing. <button class="primary" onclick="go('setup')" style="margin-left:8px">Open Setup</button></div>`:''}
+ <button class="primary" onclick="openAdd()" style="padding:8px 18px">+ Add project</button></div>`;return}
+ tabs([['overview','Overview'],['build','Build'],['releases','Releases']],S.ptab,'setPTab');
+ if(S.ptab==='build')return buildTab(p);if(S.ptab==='releases')return releasesTab(p);
+ const isPy=p.kind==='python',isNode=p.framework==='node',big=p.size_mb>300;
+ $('#content').innerHTML=`<div class="wrap"><h1>${esc(p.name)} <span class="chip">${esc(FW[p.framework]||'unknown type')}</span> ${p.changed_since_release?'<span class="chip warn">changed since last build</span>':''}</h1>
+ <p class="lead mono" style="font-size:12px">${esc(p.source)} &middot; ${p.size_truncated?'more than ':''}${p.size_mb} MB</p>
+ ${big?`<div class="note warn"><b>This folder is large (${p.size_mb} MB).</b> Everything in it is copied into every build. If it holds data such as music, videos or databases, list those folders in a file called <span class="mono">.vunduignore</span> inside the project folder (one name per line, for example <span class="mono">music</span>) so they are left out of the package.</div>`:''}
+ <div class="grid2"><div><label class="f">Project name</label><input id="f-name" value="${esc(p.name)}"><div class="help">Shown in the installer and the library.</div></div>
+ <div><label class="f">Version</label><input id="f-version" value="${esc(p.version)}"><div class="help">Numbers like 1.0.0. Each version gets its own library folder.</div></div></div>
+ <div class="grid2"><div><label class="f">Publisher / maintainer</label><input id="f-publisher" value="${esc(p.publisher)}" placeholder="Your Name &lt;you@example.com&gt;"></div>
+ <div><label class="f">${isNode?'Start file':'Main file'}</label><input id="f-entry" value="${esc(p.entry)}"><div class="help">Detected automatically. Change it only if it is wrong.</div></div></div>
+ <label class="f">Description</label><textarea id="f-description" rows="2">${esc(p.description)}</textarea>
+ ${isPy?`<label class="f">Python builder</label><select id="f-engine"><option value="">PyInstaller (easiest)</option><option value="nuitka" ${p.engine==='nuitka'?'selected':''}>Nuitka (faster program, slower build)</option></select>`:''}
+ ${isNode||isPy?`<div class="card" style="margin-top:14px"><div class="tick"><input type="checkbox" id="f-launcher" ${p.launcher!==false?'checked':''}><b>Show in the app menu, with an icon</b></div>
+ <div class="help">After installing, you will find "${esc(p.name)}" in your applications (press the Super key and search for it). If you do not choose an icon below, a clean default one is made for you.</div>
+ ${isNode?`<label class="f">Web address to open when it is launched</label><input id="f-launcher_url" value="${esc(p.launcher_url)}" placeholder="http://localhost:3000"><div class="help">${p.port?`Detected port: ${p.port}. `:'Port not detected. '}This is the page your server shows in the browser. Leave empty to run it in a terminal window instead.</div>`:''}</div>`:''}
+ ${isNode?`<div class="card"><div class="tick"><input type="checkbox" id="f-service" ${p.service?'checked':''}><b>Run as a background service (systemd)</b></div><div class="help">Keeps a server running in the background, even after you close the menu entry. Recommended for servers such as a music server.</div>
+ <div class="tick"><input type="checkbox" id="f-autostart" ${p.autostart?'checked':''}><b>Start it automatically right after installing, and at every boot</b></div>
+ <label class="f">Run the service as user (optional)</label><input id="f-service_user" value="${esc(p.service_user)}" placeholder="leave empty for a safe temporary user"><div class="help">Set this to your own user name if the server must read files in your home folder, such as your music.</div></div>`:''}
+ <label class="f">Icon / logo</label><div class="row">${p.icon?`<img src="/api/projects/${p.id}/icon?${p.icon}" width="40" height="40" style="flex:none;border-radius:6px;border:1px solid var(--line)">`:''}<input type="file" id="f-icon" accept="image/png,image/svg+xml,image/x-icon"></div><div class="help">PNG works everywhere. Windows prefers .ico and macOS .icns.</div>
+ <div class="sw"><button class="primary" onclick="saveProj('${p.id}')">Save details</button><button onclick="setPTab('build')">Next: Build &rarr;</button><span id="saved" class="ok"></span></div></div>`}
+async function saveProj(id,quiet){const b={};['name','version','publisher','entry','description','engine','service_user','launcher_url'].forEach(k=>{const e=$('#f-'+k);if(e)b[k]=e.value});['service','launcher','autostart'].forEach(k=>{const e=$('#f-'+k);if(e)b[k]=e.checked});
+ if(Object.keys(b).length)await api('PUT','/api/projects/'+id,b);const f=$('#f-icon')?.files[0];
+ if(f){const d=await new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(f)});await api('POST',`/api/projects/${id}/icon`,{data_url:d})}
+ S.projects=await api('GET','/api/projects');plist();if(!quiet&&$('#saved')){$('#saved').textContent='Saved';setTimeout(()=>{const e=$('#saved');e&&(e.textContent='')},1800)}}
+
+function fmtCard(f,label,os,p,checked){const t=S.targets[os];const ready=t.mode!=='unconfigured';
+ const sub=ready?(t.mode==='local'?'<span class="ok">builds on this computer</span>':`<span class="ok">builds on ${esc(t.user)}@${esc(t.host)}</span>`):`<span class="warn">needs a ${os} build machine</span> &middot; <a href="#" onclick="go('machines');return false">set up</a>`;
+ return `<label class="fmt ${ready?'':'dis'}"><input type="checkbox" value="${f}" ${ready&&checked?'checked':''} ${ready?'':'disabled'}><div><b>.${f}</b> &nbsp;${label}<div class="help">${sub}</div></div></label>`}
+function buildTab(p){const sty=p.framework==='node';
+ $('#content').innerHTML=`<div class="wrap"><h1>Build installers</h1><p class="lead">Tick what you want and press Build. Progress appears in the Output panel below, and the finished files are saved to your Library automatically.</p>
+ ${sty?'<div class="note">Node.js project: the .deb installs your app into <span class="mono">/opt</span> and adds a command named <span class="mono">'+esc(p.id)+'</span>. It needs Node.js on the target computer (the .deb asks for it).</div>':''}
+ <div class="fmts" id="fmts">${fmtCard('deb','Ubuntu / Debian','linux',p,true)}${fmtCard('exe','Windows','windows',p)}${fmtCard('pkg','macOS','macos',p)}</div>
+ <div class="sw"><button class="primary" id="bbtn" onclick="build('${p.id}')" style="padding:8px 20px">Build &amp; save to Library</button></div><div id="res"></div></div>`}
+async function build(id){const fm=[...document.querySelectorAll('#fmts input:checked')].map(x=>x.value);if(!fm.length){$('#res').innerHTML='<div class="note warn">Tick at least one format.</div>';return}
+ $('#bbtn').disabled=true;$('#res').innerHTML='';await saveProj(id,true);
+ try{const {job}=await api('POST',`/api/projects/${id}/build`,{formats:fm});
+ watch(job,'Output - build',async j=>{$('#bbtn')&&($('#bbtn').disabled=false);
+  const el=$('#res');if(el)el.innerHTML='<h2>Results</h2>'+j.results.map(r=>r.ok?`<div class="note ok"><b>.${r.format}</b> saved to Library as <span class="mono">${esc(r.release)}</span>: ${r.files.map(f=>esc(f.name)).join(', ')}</div>`:`<div class="note bad"><b>.${r.format}</b> failed: ${esc(r.error)}</div>`).join('')+(j.results.some(r=>r.ok)?'<button onclick="setPTab(\'releases\')">View in Releases &rarr;</button>':'');
+  await loadAll()})}catch(e){$('#res').innerHTML=`<div class="note bad">${esc(e.message)}</div>`;$('#bbtn').disabled=false}}
+async function releasesTab(p){$('#content').innerHTML=`<div class="wrap"><h1>Releases</h1><div id="rl"></div><div class="note"><b>Where does a .deb go?</b> Once installed it lives in <span class="mono">/opt/${esc(p.id)}</span> with the command <span class="mono">${esc(p.id)}</span>${p.launcher!==false?' and an entry in your app menu':''}. List its files: <span class="mono">dpkg -L ${esc(p.id)}</span>. Remove it: <span class="mono">sudo apt remove ${esc(p.id)}</span>.</div></div>`;const rs=await api('GET','/api/library?project='+p.id);$('#rl').innerHTML=relTable(rs)}
+
+/* ---------- library ---------- */
+let hostOs='linux';
+function relTable(rs){if(!rs.length)return'<div class="empty">Nothing saved yet. Build an installer and it will appear here.</div>';
+ return `<table><tr><th>Version</th><th>Build</th><th>Date</th><th>Files</th></tr>${rs.map(r=>`<tr><td class="mono">${esc(r.version)}</td><td class="mono">${esc(r.release)}</td><td>${new Date(r.time*1000).toLocaleString()}</td><td>${r.files.map(f=>`<div><a href="/api/library/${r.project}/${encodeURIComponent(r.version)}/${r.release}/${encodeURIComponent(f.name)}">${esc(f.name)}</a> <span class="mute">${sz(f.size)}</span> <a href="#" onclick="saveAs(event,'${r.project}','${esc(r.version)}','${r.release}','${esc(f.name)}')">copy to folder&hellip;</a>${f.name.endsWith('.deb')&&hostOs==='linux'?` &middot; <a href="#" onclick="installDeb(event,'${r.project}','${esc(r.version)}','${r.release}','${esc(f.name)}')">install on this computer</a> &middot; <a href="#" onclick="removeDeb(event,'${r.project}')">remove</a>`:''}</div>`).join('')}</td></tr>`).join('')}</table>`}
+async function libraryView(){tabs([['l','Backup library']],'l','');$('#content').innerHTML='<div class="wrap"><h1>Backup library</h1><p class="lead">Every finished installer, filed by project, then version, then build. Nothing is ever overwritten.</p><div id="ll"></div></div>';
+ const rs=await api('GET','/api/library');const by={};rs.forEach(r=>(by[r.project]??=[]).push(r));
+ $('#ll').innerHTML=Object.keys(by).length?Object.values(by).map(l=>`<h2>${esc(l[0].name)}</h2>${relTable(l)}`).join(''):relTable([])}
+async function installDeb(e,pid,ver,rel,file){e.preventDefault();try{const {job}=await api('POST','/api/library/install',{project:pid,version:ver,release:rel,file});
+ watch(job,'Output - install',j=>{const ok=j.results[0]&&j.results[0].ok;alert(ok?`Installed. Open the app menu (press the Super key) and search for it. Command: ${pid}\nTo remove it later, use "remove" here or: sudo apt remove ${pid}`:'Install did not finish. See the Output panel.')})}catch(x){alert(x.message)}}
+async function removeDeb(e,pid){e.preventDefault();if(!confirm('Remove "'+pid+'" from this computer? (Your saved .deb stays in the library.)'))return;
+ try{const {job}=await api('POST','/api/library/uninstall',{project:pid});watch(job,'Output - remove',j=>{const ok=j.results[0]&&j.results[0].ok;alert(ok?'Removed.':'Remove did not finish. See the Output panel.')})}catch(x){alert(x.message)}}
+async function saveAs(e,pid,ver,rel,file){e.preventDefault();const d=prompt('Copy into which folder?','~/Downloads');if(!d)return;try{const r=await api('POST','/api/library/save',{project:pid,version:ver,release:rel,file,dest_dir:d});alert('Copied to '+r.saved_to)}catch(x){alert(x.message)}}
+
+/* ---------- build machines ---------- */
+async function machinesView(){tabs([['m','Build machines']],'m','');
+ const [m,tg]=await Promise.all([api('GET','/api/machines/local'),api('GET','/api/targets')]);S.machine=m;S.targets=tg;
+ const here=m.os,others=['linux','windows','macos'].filter(x=>x!==here);const nm={linux:'Linux (.deb)',windows:'Windows (.exe)',macos:'macOS (.pkg)'};
+ $('#content').innerHTML=`<div class="wrap"><h1>Build machines</h1><p class="lead">An installer has to be built on the same kind of computer it is for. Your computer builds for itself automatically. For the others, connect a second computer or virtual machine.</p>
+ <div class="card"><div class="row"><div><b>This computer</b> <span class="chip ok">builds ${nm[here]} automatically</span></div></div>
+ <dl class="kv" style="margin-top:10px"><dt>System</dt><dd>${esc(m.system)} (${esc(m.arch)})</dd><dt>User</dt><dd>${esc(m.user)}</dd><dt>Host name</dt><dd>${esc(m.hostname)}</dd><dt>Address</dt><dd>${esc(m.ip)}</dd><dt>SSH port</dt><dd>${m.ssh_port} ${m.ssh_running?'<span class="ok">(SSH server running)</span>':'<span class="mute">(no SSH server running - not needed for local builds)</span>'}</dd></dl>
+ <div class="help">Nothing to configure here. These details were found automatically.</div></div>
+ ${others.map(o=>remoteCard(o,nm[o],m,tg[o])).join('')}</div>`;
+ others.forEach(o=>{if(o==='windows'||(o==='macos'&&here==='macos'))loadVbox(o);else if(o==='macos')$('#vb-macos').innerHTML='<div class="note">Apple only allows macOS in a virtual machine on Apple hardware, so VirtualBox is not offered for macOS on this computer. Use a real Mac or a cloud Mac.</div>'})}
+function remoteCard(os,label,m,t){const ok=t.mode==='ssh';const u=t.user||m.user;const id='r-'+os;
+ const hosts=m.ssh_hosts.map(h=>`<option value="${esc(h.host)}">${esc(h.alias)}</option>`).join('');
+ const help=os==='macos'?`<p>A Mac is needed to build <span class="mono">.pkg</span> files. Use a Mac you own, or a rented cloud Mac such as <a href="https://www.macincloud.com" target="_blank" rel="noopener">MacinCloud</a>. After signing up they give you a server address, a user name and a way to log in over SSH. Type those below.</p>`:
+ `<p>Use a Windows PC or virtual machine (VirtualBox, VMware, Hyper-V). On it, turn on <b>OpenSSH Server</b> (Settings &rarr; System &rarr; Optional features), then install Git for Windows and Node.js and/or Python. Type its address and your Windows user name below.</p>`;
+ return `<div class="card"><div class="row"><div><b>${label}</b> ${ok?`<span class="chip ok">connected: ${esc(t.user)}@${esc(t.host)}</span>`:'<span class="chip warn">not connected</span>'}</div><button onclick="document.getElementById('${id}').open=!document.getElementById('${id}').open">${ok?'Edit':'Connect'}</button></div>
+ <details id="${id}" ${ok?"":"open"}><summary style="display:none"></summary>${help}
+ <div id="vb-${os}"></div>
+ <div class="grid3"><div><label class="f">Address of the machine</label><input id="${id}-host" list="${id}-hl" value="${esc(t.host)}" placeholder="192.168.1.50 or name.example.com"><datalist id="${id}-hl">${hosts}</datalist><div class="help">An IP address or name. ${hosts?'Hosts from your SSH config are suggested.':''}</div></div>
+ <div><label class="f">User</label><input id="${id}-user" value="${esc(u)}"><div class="help">Pre-filled with your name here; change it to the user on that machine.</div></div>
+ <div><label class="f">Port</label><input id="${id}-port" value="${t.port||22}"><div class="help">22 is normal.</div></div></div>
+ <label class="f">Login key</label><div class="row"><select id="${id}-key"><option value="">(use my default SSH setup)</option>${m.keys.map(k=>`<option value="${esc(k)}" ${t.key===k?'selected':''}>${esc(k)}</option>`).join('')}${m.vundu_key_exists&&!m.keys.includes(m.vundu_key)?`<option value="${esc(m.vundu_key)}">${esc(m.vundu_key)}</option>`:''}</select><button onclick="makeKey('${id}')">Create a key for me</button></div>
+ <div class="help">Vundu logs in with an SSH key (no password typing). If you do not have one, create one, then copy the public key to the other machine.</div>
+ <div id="${id}-pub"></div>
+ <div class="sw"><button class="primary" onclick="testMachine('${os}')">Test connection</button><button onclick="saveMachine('${os}')">Save</button><span id="${id}-msg"></span></div></details></div>`}
+async function makeKey(id){try{const r=await api('POST','/api/machines/keygen',{});const sel=$('#'+id+'-key');if(![...sel.options].some(o=>o.value===r.key))sel.add(new Option(r.key,r.key));sel.value=r.key;showKey(id,r.public,r.key)}catch(e){$('#'+id+'-msg').innerHTML=`<span class="bad">${esc(e.message)}</span>`}}
+function showKey(id,pub,keypath){const user=$('#'+id+'-user').value,host=$('#'+id+'-host').value||'HOST',port=$('#'+id+'-port').value||22;const win=id==='r-windows';
+ $('#'+id+'-pub').innerHTML=`<div class="note"><b>Your public key</b> (safe to share). Add it to the other machine so it trusts this one:
+ <div class="code" style="margin:6px 0">${esc(pub)}<button class="copy" onclick="navigator.clipboard.writeText(this.parentNode.firstChild.textContent)">Copy</button></div>
+ ${win?`On Windows, paste that line into <span class="mono">C:\\Users\\${esc(user)}\\.ssh\\authorized_keys</span> (administrator accounts: <span class="mono">C:\\ProgramData\\ssh\\administrators_authorized_keys</span>).`:`Easiest way, from a terminal here:<div class="code" style="margin:6px 0">ssh-copy-id -i ${esc(keypath)}.pub -p ${esc(port)} ${esc(user)}@${esc(host)}</div>`}</div>`}
+function mvals(os){const id='r-'+os;return{host:$('#'+id+'-host').value.trim(),user:$('#'+id+'-user').value.trim(),port:+$('#'+id+'-port').value||22,key:$('#'+id+'-key').value}}
+async function testMachine(os){const id='r-'+os,msg=$('#'+id+'-msg');msg.innerHTML='<span class="mute">Testing...</span>';const v=mvals(os);
+ try{const r=await api('POST','/api/machines/test',v);msg.innerHTML=r.ok?`<span class="ok">&#10003; ${esc(r.message)}</span>`:`<span class="bad">&#10007; ${esc(r.message)}</span>`;
+  if(!r.ok){const k=v.key||(S.machine.vundu_key_exists?S.machine.vundu_key:'');let pub='';try{pub=(await api('GET','/api/machines/pubkey?key='+encodeURIComponent(k))).public}catch(e){}
+   $('#'+id+'-pub').innerHTML=(r.hint?`<div class="note bad">${esc(r.hint)}</div>`:'');if(pub&&/denied/i.test(r.message))showKey(id,pub,k||S.machine.vundu_key);else $('#'+id+'-pub').insertAdjacentHTML('beforeend','')}else $('#'+id+'-pub').innerHTML=''}catch(e){msg.innerHTML=`<span class="bad">${esc(e.message)}</span>`}}
+async function saveMachine(os){const id='r-'+os;try{await api('PUT','/api/targets',{[os]:mvals(os)});$('#'+id+'-msg').innerHTML='<span class="ok">Saved</span>';await loadAll()}catch(e){$('#'+id+'-msg').innerHTML=`<span class="bad">${esc(e.message)}</span>`}}
+
+async function loadVbox(os){const el=$('#vb-'+os);if(!el)return;let v;try{v=await api('GET','/api/vbox')}catch(e){el.innerHTML='';return}
+ if(!v.installed){el.innerHTML=`<div class="note"><b>Want to run this machine on your own computer?</b> Vundu can use a VirtualBox virtual machine and fill in the address and port for you. VirtualBox is not installed yet. <button onclick="go('setup')" style="margin-left:8px">Install it from Setup</button></div>`;return}
+ const vms=v.vms.filter(x=>os==='macos'?x.mac:!x.mac);
+ el.innerHTML=`<div class="note ok"><b>VirtualBox ${esc(v.version)} found.</b> Pick a virtual machine and Vundu will start it, set up the SSH port for you and save it as your build machine.
+ ${vms.length?`<div class="row" style="margin-top:8px"><select id="vm-${os}">${vms.map(x=>`<option value="${esc(x.name)}">${esc(x.name)} - ${x.running?'running':'off'}${x.nic1&&x.nic1!=='nat'?' (network: '+esc(x.nic1)+')':''}</option>`).join('')}</select>
+ <input id="vmu-${os}" placeholder="user name inside the VM" style="max-width:220px"><button class="primary" onclick="useVm('${os}')">Use this VM</button><button onclick="vmPower('${os}','stop')">Shut down</button></div>`:'<div class="help" style="margin-top:6px">No VirtualBox VMs found yet.</div>'}
+ ${os==='windows'?'<div class="sw"><button onclick="createVmDlg()">Create a new Windows VM&hellip;</button></div>':''}
+ <details style="margin-top:8px"><summary>First time with a new VM? One-time setup inside Windows</summary>
+ <p class="help">Install Windows in the VM, then open <b>PowerShell as Administrator</b> inside it and paste this one line. It turns on SSH, installs Git, Node.js and Python, and lets Vundu log in with your key:</p>
+ <div class="code">${esc(v.guest_command)}<button class="copy" onclick="navigator.clipboard.writeText(this.parentNode.firstChild.textContent)">Copy</button></div>
+ <p class="help">If that line cannot reach this computer, paste the contents of <span class="mono">http://127.0.0.1:8765/guest/windows.ps1</span> (opened in your browser here) into PowerShell instead.</p></details></div>`}
+async function useVm(os){const name=$('#vm-'+os).value,user=$('#vmu-'+os).value.trim();if(!user){alert('Type the user name you use to log in to the VM.');return}
+ try{const {job}=await api('POST','/api/vbox/connect',{name,user,os});watch(job,'Output - VirtualBox',async()=>{await machinesView()})}catch(e){alert(e.message)}}
+async function vmPower(os,what){const name=$('#vm-'+os).value;try{await api('POST','/api/vbox/'+what,{name});alert('Shutting down '+name+'...')}catch(e){alert(e.message)}}
+function createVmDlg(){dlg(`<h1 style="font-size:16px">Create a Windows virtual machine</h1><p class="lead">You need a Windows installer ISO file (from Microsoft) and a valid Windows licence.</p>
+ <label class="f">Name</label><input id="cv-name" value="Vundu-Windows"><label class="f">Windows ISO file</label><input id="cv-iso" placeholder="/home/you/Downloads/Win10_x64.iso">
+ <div class="grid2"><div><label class="f">Version</label><select id="cv-os"><option value="Windows10_64">Windows 10 (64-bit)</option><option value="Windows11_64">Windows 11 (needs VirtualBox 7+)</option></select></div>
+ <div><label class="f">User name you will create in Windows</label><input id="cv-user" value=""></div>
+ <div><label class="f">Memory (MB)</label><input id="cv-mem" value="6144"></div><div><label class="f">CPUs</label><input id="cv-cpu" value="4"></div></div>
+ <label class="f">Disk size (GB)</label><input id="cv-disk" value="60"><div class="sw"><button class="primary" onclick="createVm()">Create VM</button><button onclick="closeDlg()">Cancel</button></div>`)}
+async function createVm(){const b={name:$('#cv-name').value,iso:$('#cv-iso').value,ostype:$('#cv-os').value,user:$('#cv-user').value,memory:+$('#cv-mem').value,cpus:+$('#cv-cpu').value,disk:+$('#cv-disk').value};closeDlg();
+ try{const {job}=await api('POST','/api/vbox/create',b);watch(job,'Output - create VM',async()=>{await machinesView()})}catch(e){alert(e.message)}}
+
+/* ---------- setup ---------- */
+async function setupView(){tabs([['s','Setup']],'s','');const s=await api('GET','/api/setup');S.setup=s;rail();
+ const miss=s.items.filter(i=>!i.ok),rep=s.items.find(i=>i.id==='dpkg-repair'&&!i.ok);
+ $('#content').innerHTML=`<div class="wrap"><h1>Setup ${s.dry_run?'<span class="chip">dry run</span>':''}</h1><p class="lead">Installs the tools Vundu Studio needs on this computer (${esc(s.platform)}). Python and Node tools go into private folders so nothing else on your system is touched. OS packages ask for your password once.</p>
+ ${rep?'<div class="note warn"><b>Your package manager needs a quick repair.</b> A previous install was interrupted, which blocks new installs. Vundu will repair it first (safe, and it is what <span class="mono">sudo dpkg --configure -a</span> does).</div>':''}
+ ${miss.length?'':'<div class="note ok"><b>Everything is installed.</b> You are ready to build.</div>'}
+ <table><tr><th></th><th>Tool</th><th>Used for</th><th>Status</th></tr>${s.items.map(i=>`<tr><td><input type="checkbox" class="sc" value="${i.id}" ${i.ok?'disabled':'checked'}></td><td>${esc(i.label)} ${i.optional?'<span class="chip">optional</span>':''}</td><td class="mute">${esc(i.why)}</td><td class="${i.ok?'ok':i.optional?'warn':'bad'}">${i.ok?'&#10003; installed':'&#10007; missing'}</td></tr>`).join('')}</table>
+ <div class="sw"><button class="primary" id="sbtn" onclick="runSetup()" ${miss.length?'':'disabled'} style="padding:8px 20px">Install everything missing</button><button onclick="setupView()">Re-check</button></div></div>`}
+async function runSetup(){const ids=[...document.querySelectorAll('.sc:checked')].map(x=>x.value);if(!ids.length)return;$('#sbtn').disabled=true;
+ try{const {job}=await api('POST','/api/setup/install',{ids});watch(job,'Output - setup',async()=>{await loadAll()})}catch(e){alert(e.message);$('#sbtn').disabled=false}}
+
+/* ---------- add project dialog ---------- */
+function dlg(h){$('#dlg').innerHTML=h;$('#dlgwrap').style.display='flex'}function closeDlg(){$('#dlgwrap').style.display='none'}
+async function openAdd(){dlg('<h1 style="font-size:16px">Add project</h1><p class="lead">Browse to the folder that contains your project, then press Use this folder.</p><div id="br"></div>');browse('~')}
+async function browse(p){try{const d=await api('GET','/api/browse?path='+encodeURIComponent(p));
+ $('#br').innerHTML=`<input id="bp" value="${esc(d.path)}" onkeydown="if(event.key==='Enter')browse(this.value)"><div style="margin:8px 0;max-height:240px;overflow:auto;border:1px solid var(--line)">${d.path!==d.parent?`<div class="pi" data-p="${esc(d.parent)}" onclick="browse(this.dataset.p)">&#8593; ..</div>`:''}${d.dirs.map(x=>`<div class="pi" data-p="${esc(d.path.replace(/\/$/,'')+'/'+x)}" onclick="browse(this.dataset.p)"><span class="mono">${esc(x)}/</span></div>`).join('')}</div><div class="sw"><button class="primary" onclick="addProj($('#bp').value)">Use this folder</button><button onclick="closeDlg()">Cancel</button></div>`}catch(e){$('#br').insertAdjacentHTML('afterbegin',`<div class="note bad">${esc(e.message)}</div>`)}}
+async function addProj(path){try{const r=await api('POST','/api/projects',{source:path});closeDlg();S.cur=r.project.id;S.view='projects';S.ptab='overview';await loadAll();
+ if(r.detected.kind==='unknown')alert('Vundu could not recognise this project type. Supported: Node.js, Electron, Python and CMake.')}catch(e){alert(e.message)}}
+
+(async()=>{paintTheme();const i=await api('GET','/api/info');hostOs=i.host_os;$('#ver').textContent='v'+i.version;$('#st-ver').textContent='Vundu Studio '+i.version;$('#st-data').textContent=i.data_dir;const h=(location.hash||'').replace('#','').split('&')[0].split('/');if(h[0]==='project'&&h[1]){S.cur=h[1];S.ptab=h[2]||'overview'}else if(['library','machines','setup'].includes(h[0]))S.view=h[0];
+ await loadAll()})();
+</script></body></html>

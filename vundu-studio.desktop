@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Vundu Studio
+Comment=Package apps into .deb, .exe and .pkg installers
+Exec=bash -c 'cd "$(dirname "%k")" && ./run.sh'
+Terminal=false
+Categories=Development;
