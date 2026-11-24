@@ -19,6 +19,15 @@ to start. A one-off **Setup** button installs everything else.
   standard web features, so Chrome, Chromium, Edge, Brave, Vivaldi and other
   Chromium-based browsers work too.
 
+> ## Built on open-source software: credit goes to its developers
+>
+> **Vundu Studio is built around open-source software.** It does not compile,
+> sign or package anything by itself. It is a friendly front end that drives
+> the programs listed in [Built on open-source software](#built-on-open-source-software-and-attribution).
+> **All attribution and credit for the real work belong to the original
+> developers of those programs.** Vundu Studio is not affiliated with or
+> endorsed by any of them. Each tool keeps its own licence and its own authors.
+
 > **Status: early development.** Linux `.deb` builds are the most exercised path.
 > Windows and macOS builds run on remote machines over SSH and need real-world
 > testing. Please open issues.
@@ -44,7 +53,8 @@ to start. A one-off **Setup** button installs everything else.
 10. [Troubleshooting](#troubleshooting)
 11. [Tests](#tests)
 12. [Roadmap](#roadmap)
-13. [Contributing and licence](#contributing-and-licence)
+13. [Built on open-source software and attribution](#built-on-open-source-software-and-attribution)
+14. [Contributing and licence](#contributing-and-licence)
 
 ## Quick start
 
@@ -564,9 +574,46 @@ Ideas, not promises:
 - More project types (for example Rust and Go)
 - Automatic update of the private tools
 
+## Built on open-source software and attribution
+
+**Vundu Studio is built around open-source software, and all attribution
+belongs to the original developers of those programs.** Vundu Studio only
+detects your project, asks a few questions and runs these tools for you.
+Without them it would do nothing. Please thank, star, support and credit the
+people who made them.
+
+| Used for | Software | Project home |
+| --- | --- | --- |
+| Language and web server | Python | <https://www.python.org/> |
+| JavaScript projects and packages | Node.js and npm | <https://nodejs.org/> |
+| Electron installers | electron-builder | <https://www.electron.build/> |
+| Python to native executable | PyInstaller | <https://pyinstaller.org/> |
+| Python to compiled executable | Nuitka | <https://nuitka.net/> |
+| Node.js to native executable | @yao-pkg/pkg | <https://github.com/yao-pkg/pkg> |
+| C and C++ projects | CMake and CPack | <https://cmake.org/> |
+| Windows installers | NSIS | <https://nsis.sourceforge.io/> |
+| `.deb` packages | dpkg and fakeroot | <https://wiki.debian.org/Teams/Dpkg> |
+| macOS packages | pkgbuild and productbuild (Apple) | <https://developer.apple.com/> |
+| Signing `.deb` checksums | GnuPG | <https://www.gnupg.org/> |
+| Signing Windows installers | osslsigncode | <https://github.com/mtrojnar/osslsigncode> |
+| Signing macOS packages | txoof/codesign | <https://github.com/txoof/codesign> |
+| Remote Windows and macOS builds | OpenSSH | <https://www.openssh.com/> |
+| Windows in a virtual machine | VirtualBox | <https://www.virtualbox.org/> |
+
+Also thank you to the Debian, Ubuntu and Raspberry Pi OS communities, and to
+the authors of every library those tools depend on.
+
+All product and project names are trademarks of their respective owners and are
+used here only to say which software Vundu Studio works with. If you are an
+author of one of these tools and want your entry changed or added, please open
+an issue and it will be fixed straight away.
+
 ## Contributing and licence
 
 Issues and pull requests are welcome. Please run `python3 tests/test_core.py`
 before sending a change, and keep the app standard-library only.
 
-Released under the MIT licence. See [LICENSE](LICENSE).
+Released under the MIT licence. See [LICENSE](LICENSE). The MIT licence covers
+Vundu Studio's own code only. The tools listed in
+[Built on open-source software](#built-on-open-source-software-and-attribution)
+are not part of this repository and keep their own licences.
