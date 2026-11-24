@@ -1,4 +1,4 @@
-# Vundu Studio
+# Vundu Studio   [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/MindFarter/vundu-studio)
 
 **Version 0.0.6** · Open-source application packaging workstation
 
