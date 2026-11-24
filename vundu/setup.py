@@ -11,7 +11,7 @@ import subprocess
 import sys
 import time
 
-from . import library as lib
+from . import jobs, library as lib
 
 IS_WIN = sys.platform.startswith("win")
 IS_MAC = sys.platform == "darwin"
@@ -90,6 +90,10 @@ COMPONENTS = [
          check=_which("patchelf"), apt="patchelf", linux_only=True),
     dict(id="ssh", label="OpenSSH client", why="Building on Windows/macOS machines remotely", kind="system",
          check=_which("ssh"), apt="openssh-client"),
+    dict(id="gnupg", label="GnuPG", why="Signing .deb and Raspberry Pi packages", kind="system", optional=True,
+         check=_which("gpg"), apt="gnupg", brew="gnupg", win="GnuPG.GnuPG"),
+    dict(id="osslsigncode", label="osslsigncode", why="Signing Windows .exe installers (works on Linux and macOS)",
+         kind="system", optional=True, check=_which("osslsigncode"), apt="osslsigncode", brew="osslsigncode"),
     dict(id="nsis", label="NSIS", why="Windows .exe installers from CMake projects", kind="system", optional=True,
          check=_which("makensis"), apt="nsis", brew="makensis", win="NSIS.NSIS"),
     dict(id="venv", label="Private Python environment", why="Holds PyInstaller and Nuitka", kind="venv",
@@ -150,13 +154,10 @@ def _run(cmd, log, shell=False, cwd=None):
         log("  (dry run - not executed)")
         return 0
     try:
-        pr = subprocess.Popen(cmd, shell=shell, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        return jobs.stream(cmd, lambda line: log("  " + line), shell=shell, cwd=cwd)
     except OSError as e:
         log(f"  could not start: {e}")
         return 127
-    for line in pr.stdout:
-        log("  " + line.rstrip())
-    return pr.wait()
 
 
 def _elevate_prefix(log):

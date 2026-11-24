@@ -1,4 +1,5 @@
 """Projects + backup library. Every build is stored as its own release, never overwritten."""
+import hashlib
 import json
 import os
 import re
@@ -21,6 +22,23 @@ def init():
 
 def slug(s):
     return re.sub(r"[^a-z0-9]+", "-", s.lower()).strip("-") or "project"
+
+
+VERSION_RE = re.compile(r"[A-Za-z0-9][\w.+~-]{0,63}")
+URL_RE = re.compile(r"https?://[\w.\-:/?#=+~@,]{1,200}")  # no quotes, spaces, ; & $ or % : it ends up in a shell line
+USER_RE = re.compile(r"[a-z_][a-z0-9_-]{0,31}")
+
+
+def normalize_repo(v):
+    """'https://github.com/owner/repo.git' or 'owner/repo' -> 'owner/repo'; '' stays ''."""
+    v = re.sub(r"^https?://github\.com/|\.git$|/$", "", str(v or "").strip())
+    if v and not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", v):
+        raise ValueError("The GitHub repository must look like owner/name (for example MindFarter/vundu-studio).")
+    return v
+
+
+def valid_version(v):
+    return bool(VERSION_RE.fullmatch(str(v)))
 
 
 def _jload(p, default=None):
@@ -64,14 +82,15 @@ def create_project(source, det):
     while os.path.exists(os.path.join(PROJECTS, pid)):
         pid, n = f"{base}-{n}", n + 1
     p = {
-        "id": pid, "name": det["name"], "version": det["version"], "publisher": "",
+        "id": pid, "name": det["name"], "version": det["version"] if valid_version(det["version"]) else "0.0.1",
+        "publisher": "",
         "description": "", "source": source, "kind": det["kind"],
         "framework": det["framework"], "entry": det["entry"],
         "engine": None, "service": False, "service_user": "", "autostart": False,
         "port": det.get("port"),
         "launcher": det["framework"] in ("node", "pyinstaller", "nuitka"),
         "launcher_url": f"http://localhost:{det['port']}" if det.get("port") else "",
-        "icon": None, "created": time.time(), "last_fingerprint": None,
+        "icon": None, "created": time.time(), "last_fingerprint": None, "github": "",
     }
     if det.get("icon"):
         set_icon_file(p, det["icon"])
@@ -97,25 +116,50 @@ def project_lib(pid):
 
 def next_build(pid, version):
     d = os.path.join(project_lib(pid), version)
-    return len(os.listdir(d)) + 1 if os.path.isdir(d) else 1
+    nums = [int(m.group(1)) for n in (os.listdir(d) if os.path.isdir(d) else [])
+            if (m := re.fullmatch(r"build-(\d+)", n))]
+    return max(nums, default=0) + 1
 
 
-def store_release(p, files, fingerprint, log_text, engine_note=""):
-    """files: list of local paths. Returns release record."""
+def release_dir(rec):
+    return os.path.join(project_lib(rec["project"]), rec["version"], rec["release"])
+
+
+def _sha256(path):
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def store_release(p, files, fingerprint, log_text, engine_note="", signed=(), after=None):
+    """files: list of local paths. Returns release record. Every release gets a SHA256SUMS file so a
+    download can be checked; after(rdir) may add more files (a signature) and returns their names."""
+    if not valid_version(p["version"]):
+        raise ValueError(f"Bad version {p['version']!r}: use letters, numbers and . + ~ - _ only.")
     build = next_build(p["id"], p["version"])
     rel_id = f"build-{build:03d}"
     rdir = os.path.join(project_lib(p["id"]), p["version"], rel_id)
     os.makedirs(rdir)
-    stored = []
-    for f in files:
-        shutil.copyfile(f, os.path.join(rdir, os.path.basename(f)))
-        stored.append({"name": os.path.basename(f), "size": os.path.getsize(f)})
-    with open(os.path.join(rdir, "build.log"), "w") as lf:
-        lf.write(log_text)
-    rec = {"project": p["id"], "name": p["name"], "version": p["version"], "build": build,
-           "release": rel_id, "time": time.time(), "files": stored,
-           "source_fingerprint": fingerprint, "note": engine_note}
-    _jsave(os.path.join(rdir, "release.json"), rec)
+    try:
+        stored = []
+        for f in files:
+            shutil.copyfile(f, os.path.join(rdir, os.path.basename(f)))
+            stored.append({"name": os.path.basename(f), "size": os.path.getsize(f)})
+        with open(os.path.join(rdir, "SHA256SUMS"), "w") as sf:  # same format as `sha256sum`, so `sha256sum -c` works
+            sf.writelines(f"{_sha256(os.path.join(rdir, s['name']))}  {s['name']}\n" for s in sorted(stored, key=lambda s: s["name"]))
+        extra = ["SHA256SUMS"] + (after(rdir) if after else [])
+        stored += [{"name": n, "size": os.path.getsize(os.path.join(rdir, n))} for n in extra]
+        with open(os.path.join(rdir, "build.log"), "w") as lf:
+            lf.write(log_text)
+        rec = {"project": p["id"], "name": p["name"], "version": p["version"], "build": build,
+               "release": rel_id, "time": time.time(), "files": stored, "signed": list(signed),
+               "source_fingerprint": fingerprint, "note": engine_note}
+        _jsave(os.path.join(rdir, "release.json"), rec)
+    except Exception:
+        shutil.rmtree(rdir, ignore_errors=True)  # no half-made release
+        raise
     return rec
 
 
@@ -140,7 +184,8 @@ def list_releases(pid=None):
 
 
 def release_file(pid, version, rel, name):
-    # path-traversal safe
+    if not valid_version(version) or not re.fullmatch(r"[\w-]+", str(rel)):
+        return None
     base = os.path.realpath(os.path.join(LIBRARY, slug(pid), version, rel))
     p = os.path.realpath(os.path.join(base, name))
     if not p.startswith(base + os.sep) or not os.path.isfile(p):
@@ -153,6 +198,7 @@ def host_os():
     return "linux" if sys.platform.startswith("linux") else "macos" if sys.platform == "darwin" else "windows"
 
 
+TARGET_KEYS = ("linux", "windows", "macos", "pi")  # "pi" = a Raspberry Pi used to build Python/CMake projects
 REMOTE_DEFAULT = {"mode": "unconfigured", "host": "", "user": "", "port": 22, "key": "", "workdir": "vundu-build"}
 
 
@@ -160,7 +206,7 @@ def get_targets():
     """The computer Vundu runs on builds its own OS automatically; other OSes need an SSH machine."""
     saved = _jload(TARGETS_FILE, {})
     out = {}
-    for k in ("linux", "windows", "macos"):
+    for k in TARGET_KEYS:
         if k == host_os():
             out[k] = {"mode": "local", "host": "", "user": "", "port": 22, "key": "", "workdir": ""}
         else:
@@ -171,7 +217,7 @@ def get_targets():
 def save_targets(t):
     saved = _jload(TARGETS_FILE, {})
     for k, v in t.items():
-        if k in ("linux", "windows", "macos") and k != host_os():
+        if k in TARGET_KEYS and k != host_os():
             cur = {**REMOTE_DEFAULT, **saved.get(k, {})}
             cur.update({f: v[f] for f in REMOTE_DEFAULT if f in v})
             cur["mode"] = "ssh" if cur["host"] and cur["user"] else "unconfigured"

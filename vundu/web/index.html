@@ -4,8 +4,8 @@
 <script>try{var m=location.hash.match(/theme=(dark|light)/);var t=(m&&m[1])||localStorage.getItem('vundu-theme')||(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');document.documentElement.dataset.theme=t}catch(e){}</script>
 <style>
 :root{--mono:ui-monospace,"JetBrains Mono","Cascadia Code","Fira Code",Menlo,Consolas,monospace;--sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-[data-theme=dark]{--bg:#1e1e1e;--bg2:#252526;--bg3:#2d2d30;--bar:#181818;--ink:#d4d4d4;--mute:#8b8b8b;--line:#3c3c3c;--acc:#4da3ff;--accbg:#0e639c;--ok:#4ec9b0;--bad:#f48771;--warn:#e5c07b;--sel:#37373d;--term:#141414;--termink:#cccccc;--cmd:#4da3ff;--inbg:#3c3c3c}
-[data-theme=light]{--bg:#ffffff;--bg2:#f3f3f3;--bg3:#ececec;--bar:#e8e8e8;--ink:#24292f;--mute:#6a737d;--line:#d4d4d4;--acc:#0b63c4;--accbg:#0b63c4;--ok:#1a7f5a;--bad:#c62f2f;--warn:#9a6700;--sel:#e4e6e8;--term:#f8f8f8;--termink:#24292f;--cmd:#0b63c4;--inbg:#ffffff}
+[data-theme=dark]{--bg:#1e1e1e;--bg2:#252526;--bg3:#2d2d30;--bar:#181818;--ink:#d4d4d4;--mute:#8b8b8b;--line:#3c3c3c;--acc:#FFC014;--accbg:#FFC014;--onacc:#1e1e1e;--ok:#4ec9b0;--bad:#f48771;--warn:#e5c07b;--sel:#37373d;--term:#141414;--termink:#cccccc;--cmd:#FFC014;--inbg:#3c3c3c}
+[data-theme=light]{--bg:#ffffff;--bg2:#f3f3f3;--bg3:#ececec;--bar:#e8e8e8;--ink:#24292f;--mute:#6a737d;--line:#d4d4d4;--acc:#0b63c4;--accbg:#0b63c4;--onacc:#ffffff;--ok:#1a7f5a;--bad:#c62f2f;--warn:#9a6700;--sel:#e4e6e8;--term:#f8f8f8;--termink:#24292f;--cmd:#0b63c4;--inbg:#ffffff}
 *{box-sizing:border-box}html,body{height:100%;margin:0}
 body{font:13.5px/1.5 var(--sans);background:var(--bg);color:var(--ink);overflow:hidden}
 #app{display:grid;grid-template-rows:36px 1fr auto 24px;height:100vh}
@@ -37,7 +37,7 @@ h1{font-size:19px;margin:0 0 4px}h2{font-size:12px;margin:26px 0 10px;text-trans
 .lead{color:var(--mute);margin:0 0 14px}.mono{font-family:var(--mono)}.mute{color:var(--mute)}.ok{color:var(--ok)}.bad{color:var(--bad)}.warn{color:var(--warn)}
 button{font:inherit;padding:5px 13px;background:var(--bg3);color:var(--ink);border:1px solid var(--line);border-radius:3px;cursor:pointer}
 button:hover:not(:disabled){border-color:var(--acc)}button:disabled{opacity:.45;cursor:default}
-button.primary{background:var(--accbg);border-color:var(--accbg);color:#fff}button.primary:hover:not(:disabled){filter:brightness(1.12)}
+button.primary{background:var(--accbg);border-color:var(--accbg);color:var(--onacc)}button.primary:hover:not(:disabled){filter:brightness(1.12)}
 button.ghost{background:none;border-color:transparent;color:var(--acc);padding:3px 6px}
 input[type=text],input:not([type]),select,textarea{width:100%;font:13px var(--mono);padding:6px 8px;background:var(--inbg);color:var(--ink);border:1px solid var(--line);border-radius:3px}
 input:focus,select:focus,textarea:focus{outline:1px solid var(--acc);border-color:var(--acc)}
@@ -64,8 +64,8 @@ td.ok,td.bad,td.warn{white-space:nowrap}a{color:var(--acc);text-decoration:none}
 #chead .sp{flex:1}#chead button{padding:0 8px;font-size:12px;background:none;border:0;color:var(--mute)}#chead button:hover{color:var(--ink)}
 #logbody div{white-space:pre-wrap}#logbody{flex:1;overflow:auto;margin:0;padding:8px 14px;font:12px/1.55 var(--mono);color:var(--termink);white-space:pre-wrap;word-break:break-word}
 .l-cmd{color:var(--cmd)}.l-sec{color:var(--warn);font-weight:700}.l-err{color:var(--bad)}.l-ok{color:var(--ok)}.l-dim{color:var(--mute)}
-#status{display:flex;align-items:center;gap:16px;padding:0 12px;background:var(--accbg);color:#fff;font:11px var(--mono)}
-#status a,#status button{color:#fff;background:none;border:0;padding:0;font:inherit;cursor:pointer}#status .sp{flex:1}
+#status{display:flex;align-items:center;gap:16px;padding:0 12px;background:var(--accbg);color:var(--onacc);font:11px var(--mono)}
+#status a,#status button{color:var(--onacc);background:none;border:0;padding:0;font:inherit;cursor:pointer}#status .sp{flex:1}
 .empty{text-align:center;color:var(--mute);padding:40px 10px}
 .copy{position:absolute;top:4px;right:4px;padding:1px 8px;font-size:11px}
 details summary{cursor:pointer;color:var(--acc);margin:8px 0}
@@ -91,10 +91,10 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const api=async(m,u,b)=>{const r=await fetch(u,{method:m,headers:{'X-Vundu':'1','Content-Type':'application/json'},body:b?JSON.stringify(b):undefined});
  const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||r.statusText);return j};
 const sz=n=>n>1e6?(n/1e6).toFixed(1)+' MB':Math.max(1,Math.round(n/1e3))+' KB';
-const I={projects:'<path d="M3 6h6l2 2h10v11H3z"/>',library:'<path d="M3 4h18v4H3zM5 8v12h14V8M9 12h6"/>',machines:'<path d="M4 4h16v6H4zM4 14h16v6H4zM8 7h.01M8 17h.01"/>',setup:'<path d="M12 3v12m0 0l-4-4m4 4l4-4M4 20h16"/>',
+const I={projects:'<path d="M3 6h6l2 2h10v11H3z"/>',library:'<path d="M3 4h18v4H3zM5 8v12h14V8M9 12h6"/>',machines:'<path d="M4 4h16v6H4zM4 14h16v6H4zM8 7h.01M8 17h.01"/>',setup:'<path d="M12 3v12m0 0l-4-4m4 4l4-4M4 20h16"/>',build:'<path d="M12 3l8 4v10l-8 4-8-4V7zM4 7l8 4 8-4M12 11v10"/>',signing:'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6zM9 12l2 2 4-4"/>',
  sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/>',moon:'<path d="M20 14.5A8 8 0 019.5 4 8 8 0 1020 14.5z"/>'};
 const svg=n=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${I[n]}</svg>`;
-let S={projects:[],cur:null,view:'projects',ptab:'overview',targets:null,setup:null,machine:null};
+let S={projects:[],cur:null,view:'projects',ptab:'overview',ltab:'releases',lproj:null,bproj:null,targets:null,setup:null,machine:null,signing:null};
 let poll=null;
 
 /* ---------- theme ---------- */
@@ -109,45 +109,55 @@ function lineClass(l){return /^\$ |^\[remote\] \$/.test(l)?'l-cmd':/^===|^== /.t
 function appendLog(lines){if(!lines.length)return;const b=$('#logbody');const near=b.scrollHeight-b.scrollTop-b.clientHeight<80;const f=document.createDocumentFragment();
  lines.forEach(l=>{const d=document.createElement('div');d.className=lineClass(l);d.textContent=l;f.appendChild(d)});b.appendChild(f);
  while(b.childNodes.length>MAXDOM)b.removeChild(b.firstChild);if(near)b.scrollTop=b.scrollHeight}
-function watch(job,title,done){showLog(title);clearLog();clearInterval(poll);let since=0,busy=false,errs=0;
+const IDLE_MS=20000;
+function watch(job,title,done){showLog(title);clearLog();clearInterval(poll);let since=0,busy=false,errs=0,last=Date.now(),warned=false;
  const tick=async()=>{if(busy)return;busy=true;let j;try{j=await api('GET',`/api/jobs/${job}?since=${since}`);errs=0}catch(e){busy=false;if(++errs>=5){clearInterval(poll);appendLog(['== Lost contact with Vundu Studio (was it restarted?). Reload this page.'])}return}
   if(j.dropped)appendLog([`... ${j.dropped} earlier lines not shown (the full log is saved with the release)`]);appendLog(j.lines);since=j.next;busy=false;
+  if(j.lines.length){last=Date.now();warned=false}
+  else if(!j.done&&!warned&&Date.now()-last>IDLE_MS){warned=true;appendLog(['== NO OUTPUT FOR 20 SECONDS. This may just be a slow step. But if a question is waiting for you: click the terminal window where you started Vundu Studio, read the question, and press the key it asks for (usually y, then Enter).'])}
   if(j.done){clearInterval(poll);done&&done(j)}};
  poll=setInterval(tick,700);tick()}
 
 /* ---------- navigation ---------- */
 function rail(){const m=S.setup?S.setup.missing:0;
- const b=(id,l)=>`<button class="rb ${S.view===id?'on':''}" onclick="go('${id}')" title="${l}">${svg(id)}${l}${id==='setup'&&m?`<span class="badge">${m}</span>`:''}</button>`;
- $('#rail').innerHTML=b('projects','Projects')+b('library','Library')+b('machines','Machines')+b('setup','Setup');
+ const b=(id,l,t)=>`<button class="rb ${S.view===id?'on':''}" onclick="go('${id}')" title="${t||l}">${svg(id)}${l}${id==='setup'&&m?`<span class="badge">${m}</span>`:''}</button>`;
+ $('#rail').innerHTML=b('projects','Projects')+b('library','Library')+b('machines','Machines')+b('signing','Signing','Licensing & Signing')+b('build','Build')+b('setup','Setup');
  $('#side').classList.toggle('hide',S.view!=='projects')}
 function go(v){S.view=v;if(v==='projects'&&!S.ptab)S.ptab='overview';render()}
-async function loadAll(){const [ps,tg,st]=await Promise.all([api('GET','/api/projects'),api('GET','/api/targets'),api('GET','/api/setup')]);S.projects=ps;S.targets=tg;S.setup=st;
- $('#st-setup').innerHTML=st.missing?`<span style="color:#ffd27a">&#9888; Setup needed (${st.missing})</span>`:'&#10003; Ready';render()}
+let rescan=null;
+function waitScan(){clearTimeout(rescan);if(!S.projects.some(p=>p.scanning))return;
+ rescan=setTimeout(async()=>{try{S.projects=await api('GET','/api/projects')}catch(e){return}plist();const p=S.projects.find(x=>x.id===S.cur);
+  if(p){const a=$('#psize'),c=$('#pchg');if(a)a.innerHTML=sizeText(p);if(c)c.innerHTML=chgChip(p)}waitScan()},2000)}
+const sizeText=p=>p.scanning?'checking size...':(p.size_truncated?'more than ':'')+p.size_mb+' MB';
+const chgChip=p=>p.changed_since_release?'<span class="chip warn">changed since last build</span>':'';
+async function loadAll(){const [ps,tg,st,sg]=await Promise.all([api('GET','/api/projects'),api('GET','/api/targets'),api('GET','/api/setup'),api('GET','/api/signing')]);S.projects=ps;S.targets=tg;S.setup=st;S.signing=sg;waitScan();
+ $('#st-setup').innerHTML=st.missing?`<b>&#9888; Setup needed (${st.missing})</b>`:'&#10003; Ready';render()}
 function render(){rail();plist();
- if(S.view==='projects')return projectView();if(S.view==='library')return libraryView();if(S.view==='machines')return machinesView();return setupView()}
+ if(S.view==='projects')return projectView();if(S.view==='library')return libraryView();if(S.view==='machines')return machinesView();if(S.view==='signing')return signingView();if(S.view==='build')return buildView();return setupView()}
 function tabs(list,cur,fn){$('#tabs').innerHTML=list.map(([id,l])=>`<button class="tab ${cur===id?'on':''}" onclick="${fn}('${id}')">${l}</button>`).join('')}
 function plist(){$('#plist').innerHTML=S.projects.map(p=>`<div class="pi ${S.cur===p.id?'on':''}" onclick="selProject('${p.id}')">${p.icon?`<img src="/api/projects/${p.id}/icon?${p.icon}">`:'<div class="ph"></div>'}<div><b>${esc(p.name)}${p.changed_since_release?'<span class="dot" title="Source changed since last build"></span>':''}</b><small>${esc(p.framework||p.kind)} ${esc(p.version)}</small></div></div>`).join('')||'<div class="empty">No projects yet</div>'}
 function selProject(id){S.cur=id;S.view='projects';S.ptab='overview';render()}
 function setPTab(t){S.ptab=t;projectView()}
 
 /* ---------- projects ---------- */
+const FL={deb:'.deb',exe:'.exe',pkg:'.pkg',pi:'.deb (Raspberry Pi)'};
 const FW={electron:'Electron app',node:'Node.js app / server',pyinstaller:'Python app',nuitka:'Python app',cmake:'C/C++ (CMake) project'};
 function projectView(){const p=S.projects.find(x=>x.id===S.cur);
  if(!p){tabs([['w','Welcome']],'w','');$('#content').innerHTML=`<div class="wrap"><h1>Welcome to Vundu Studio</h1><p class="lead">Turn your app into an installer people can double-click. Four easy steps:</p>
  <div class="steps"><div class="step"><div class="n">1</div><b>Add your project</b><span>Pick the folder that holds your code.</span></div><div class="step"><div class="n">2</div><b>Check the details</b><span>Name, version and an icon.</span></div><div class="step"><div class="n">3</div><b>Press Build</b><span>Choose .deb, .exe or .pkg.</span></div><div class="step"><div class="n">4</div><b>Find it in Library</b><span>Every build is saved by version.</span></div></div>
  ${S.setup&&S.setup.missing?`<div class="note warn"><b>First, a one-off setup.</b> Some tools are missing. <button class="primary" onclick="go('setup')" style="margin-left:8px">Open Setup</button></div>`:''}
  <button class="primary" onclick="openAdd()" style="padding:8px 18px">+ Add project</button></div>`;return}
- tabs([['overview','Overview'],['build','Build'],['releases','Releases']],S.ptab,'setPTab');
- if(S.ptab==='build')return buildTab(p);if(S.ptab==='releases')return releasesTab(p);
+ tabs([['overview','Overview']],'overview','setPTab');
  const isPy=p.kind==='python',isNode=p.framework==='node',big=p.size_mb>300;
- $('#content').innerHTML=`<div class="wrap"><h1>${esc(p.name)} <span class="chip">${esc(FW[p.framework]||'unknown type')}</span> ${p.changed_since_release?'<span class="chip warn">changed since last build</span>':''}</h1>
- <p class="lead mono" style="font-size:12px">${esc(p.source)} &middot; ${p.size_truncated?'more than ':''}${p.size_mb} MB</p>
+ $('#content').innerHTML=`<div class="wrap"><h1>${esc(p.name)} <span class="chip">${esc(FW[p.framework]||'unknown type')}</span> <span id="pchg">${chgChip(p)}</span></h1>
+ <p class="lead mono" style="font-size:12px">${esc(p.source)} &middot; <span id="psize">${sizeText(p)}</span></p>
  ${big?`<div class="note warn"><b>This folder is large (${p.size_mb} MB).</b> Everything in it is copied into every build. If it holds data such as music, videos or databases, list those folders in a file called <span class="mono">.vunduignore</span> inside the project folder (one name per line, for example <span class="mono">music</span>) so they are left out of the package.</div>`:''}
  <div class="grid2"><div><label class="f">Project name</label><input id="f-name" value="${esc(p.name)}"><div class="help">Shown in the installer and the library.</div></div>
  <div><label class="f">Version</label><input id="f-version" value="${esc(p.version)}"><div class="help">Numbers like 1.0.0. Each version gets its own library folder.</div></div></div>
  <div class="grid2"><div><label class="f">Publisher / maintainer</label><input id="f-publisher" value="${esc(p.publisher)}" placeholder="Your Name &lt;you@example.com&gt;"></div>
  <div><label class="f">${isNode?'Start file':'Main file'}</label><input id="f-entry" value="${esc(p.entry)}"><div class="help">Detected automatically. Change it only if it is wrong.</div></div></div>
  <label class="f">Description</label><textarea id="f-description" rows="2">${esc(p.description)}</textarea>
+ <label class="f">GitHub repository (optional)</label><input id="f-github" value="${esc(p.github)}" placeholder="MindFarter/vundu-studio"><div class="help">Where you publish releases, as <span class="mono">owner/name</span>. Vundu uses it to check a build against what you published on GitHub, and adds a <span class="mono">verify.py</span> for your users to every release. Tag each GitHub release <span class="mono">v${esc(p.version)}</span> and attach <span class="mono">SHA256SUMS</span>.</div>
  ${isPy?`<label class="f">Python builder</label><select id="f-engine"><option value="">PyInstaller (easiest)</option><option value="nuitka" ${p.engine==='nuitka'?'selected':''}>Nuitka (faster program, slower build)</option></select>`:''}
  ${isNode||isPy?`<div class="card" style="margin-top:14px"><div class="tick"><input type="checkbox" id="f-launcher" ${p.launcher!==false?'checked':''}><b>Show in the app menu, with an icon</b></div>
  <div class="help">After installing, you will find "${esc(p.name)}" in your applications (press the Super key and search for it). If you do not choose an icon below, a clean default one is made for you.</div>
@@ -156,46 +166,88 @@ function projectView(){const p=S.projects.find(x=>x.id===S.cur);
  <div class="tick"><input type="checkbox" id="f-autostart" ${p.autostart?'checked':''}><b>Start it automatically right after installing, and at every boot</b></div>
  <label class="f">Run the service as user (optional)</label><input id="f-service_user" value="${esc(p.service_user)}" placeholder="leave empty for a safe temporary user"><div class="help">Set this to your own user name if the server must read files in your home folder, such as your music.</div></div>`:''}
  <label class="f">Icon / logo</label><div class="row">${p.icon?`<img src="/api/projects/${p.id}/icon?${p.icon}" width="40" height="40" style="flex:none;border-radius:6px;border:1px solid var(--line)">`:''}<input type="file" id="f-icon" accept="image/png,image/svg+xml,image/x-icon"></div><div class="help">PNG works everywhere. Windows prefers .ico and macOS .icns.</div>
- <div class="sw"><button class="primary" onclick="saveProj('${p.id}')">Save details</button><button onclick="setPTab('build')">Next: Build &rarr;</button><span id="saved" class="ok"></span></div></div>`}
-async function saveProj(id,quiet){const b={};['name','version','publisher','entry','description','engine','service_user','launcher_url'].forEach(k=>{const e=$('#f-'+k);if(e)b[k]=e.value});['service','launcher','autostart'].forEach(k=>{const e=$('#f-'+k);if(e)b[k]=e.checked});
+ <div class="sw"><button class="primary" onclick="saveProj('${p.id}')">Save details</button><button onclick="S.bproj='${p.id}';go('build')">Next: Build &rarr;</button><span id="saved" class="ok"></span></div></div>`}
+async function saveProj(id,quiet){const b={};['name','version','publisher','entry','description','engine','service_user','launcher_url','github'].forEach(k=>{const e=$('#f-'+k);if(e)b[k]=e.value});['service','launcher','autostart'].forEach(k=>{const e=$('#f-'+k);if(e)b[k]=e.checked});
  if(Object.keys(b).length)await api('PUT','/api/projects/'+id,b);const f=$('#f-icon')?.files[0];
  if(f){const d=await new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(f)});await api('POST',`/api/projects/${id}/icon`,{data_url:d})}
  S.projects=await api('GET','/api/projects');plist();if(!quiet&&$('#saved')){$('#saved').textContent='Saved';setTimeout(()=>{const e=$('#saved');e&&(e.textContent='')},1800)}}
 
 function fmtCard(f,label,os,p,checked){const t=S.targets[os];const ready=t.mode!=='unconfigured';
  const sub=ready?(t.mode==='local'?'<span class="ok">builds on this computer</span>':`<span class="ok">builds on ${esc(t.user)}@${esc(t.host)}</span>`):`<span class="warn">needs a ${os} build machine</span> &middot; <a href="#" onclick="go('machines');return false">set up</a>`;
- return `<label class="fmt ${ready?'':'dis'}"><input type="checkbox" value="${f}" ${ready&&checked?'checked':''} ${ready?'':'disabled'}><div><b>.${f}</b> &nbsp;${label}<div class="help">${sub}</div></div></label>`}
-function buildTab(p){const sty=p.framework==='node';
- $('#content').innerHTML=`<div class="wrap"><h1>Build installers</h1><p class="lead">Tick what you want and press Build. Progress appears in the Output panel below, and the finished files are saved to your Library automatically.</p>
- ${sty?'<div class="note">Node.js project: the .deb installs your app into <span class="mono">/opt</span> and adds a command named <span class="mono">'+esc(p.id)+'</span>. It needs Node.js on the target computer (the .deb asks for it).</div>':''}
- <div class="fmts" id="fmts">${fmtCard('deb','Ubuntu / Debian','linux',p,true)}${fmtCard('exe','Windows','windows',p)}${fmtCard('pkg','macOS','macos',p)}</div>
+ return `<label class="fmt ${ready?'':'dis'}"><input type="checkbox" value="${f}" ${ready&&checked?'checked':''} ${ready?'':'disabled'}><div><b>.${f}</b> &nbsp;${label}<div class="help">${sub} &middot; ${signChip(f,p)}</div></div></label>`}
+const MACSIGN=['pyinstaller','nuitka','node'];
+function signChip(f,p){const on=S.signing&&S.signing.settings[f].enabled&&(f!=='pkg'||MACSIGN.includes(p.framework));
+ return on?'<a href="#" onclick="go(\'signing\');return false"><span class="chip ok">signed</span></a>':'<a href="#" onclick="go(\'signing\');return false"><span class="chip warn">not signed</span></a>'}
+function piCard(p){const loc=p.framework==='node'||p.framework==='electron',m=loc?S.targets.linux:S.targets.pi,ready=m.mode!=='unconfigured';
+ const sub=ready?(m.mode==='local'?`<span class="ok">builds on this computer</span> <span class="mute">${p.framework==='node'?'(any Raspberry Pi, 32- or 64-bit)':'(64-bit Pi, arm64)'}</span>`:`<span class="ok">builds on ${esc(m.user)}@${esc(m.host)}</span>`)
+  :`<span class="warn">needs a ${loc?'Linux':'Raspberry Pi'} build machine</span> &middot; <a href="#" onclick="go('machines');return false">set up</a>`;
+ return `<label class="fmt ${ready?'':'dis'}"><input type="checkbox" value="pi" ${ready?'':'disabled'}><div><b>.deb</b> &nbsp;Raspberry Pi OS (Trixie)<div class="help">${sub} &middot; ${signChip('pi',p)}</div></div></label>`}
+function buildView(){tabs([['b','Build']],'b','');
+ if(!S.projects.length){$('#content').innerHTML='<div class="wrap"><h1>Build installers</h1><div class="empty">No projects yet. Add one first.<br><br><button class="primary" onclick="go(\'projects\');openAdd()">+ Add project</button></div></div>';return}
+ const p=S.projects.find(x=>x.id===S.bproj)||S.projects.find(x=>x.id===S.cur)||S.projects[0];S.bproj=p.id;
+ $('#content').innerHTML=`<div class="wrap"><h1>Build installers</h1><p class="lead">First choose your build machines on the <a href="#" onclick="go('machines');return false">Machines</a> page and set up <a href="#" onclick="go('signing');return false">Licensing &amp; Signing</a>. Then pick a project, tick what you want and press Build. Progress appears in the Output panel below, and the finished files are saved to your Library automatically.</p>
+ <label class="f">Project</label><select id="b-proj" onchange="S.bproj=this.value;buildView()">${S.projects.map(x=>`<option value="${esc(x.id)}" ${x.id===p.id?'selected':''}>${esc(x.name)} ${esc(x.version)}</option>`).join('')}</select>
+ ${p.framework==='node'?'<div class="note">Node.js project: the .deb installs your app into <span class="mono">/opt</span> and adds a command named <span class="mono">'+esc(p.package)+'</span>. It needs Node.js on the target computer (the .deb asks for it).</div>':''}
+ <div class="fmts" id="fmts" style="margin-top:12px">${fmtCard('deb','Ubuntu / Debian','linux',p,true)}${piCard(p)}${fmtCard('exe','Windows','windows',p)}${fmtCard('pkg','macOS','macos',p)}</div>
  <div class="sw"><button class="primary" id="bbtn" onclick="build('${p.id}')" style="padding:8px 20px">Build &amp; save to Library</button></div><div id="res"></div></div>`}
 async function build(id){const fm=[...document.querySelectorAll('#fmts input:checked')].map(x=>x.value);if(!fm.length){$('#res').innerHTML='<div class="note warn">Tick at least one format.</div>';return}
  $('#bbtn').disabled=true;$('#res').innerHTML='';await saveProj(id,true);
  try{const {job}=await api('POST',`/api/projects/${id}/build`,{formats:fm});
  watch(job,'Output - build',async j=>{$('#bbtn')&&($('#bbtn').disabled=false);
-  const el=$('#res');if(el)el.innerHTML='<h2>Results</h2>'+j.results.map(r=>r.ok?`<div class="note ok"><b>.${r.format}</b> saved to Library as <span class="mono">${esc(r.release)}</span>: ${r.files.map(f=>esc(f.name)).join(', ')}</div>`:`<div class="note bad"><b>.${r.format}</b> failed: ${esc(r.error)}</div>`).join('')+(j.results.some(r=>r.ok)?'<button onclick="setPTab(\'releases\')">View in Releases &rarr;</button>':'');
+  const el=$('#res');if(el)el.innerHTML='<h2>Results</h2>'+j.results.map(r=>r.ok?`<div class="note ok"><b>${FL[r.format]||r.format}</b> saved to Library as <span class="mono">${esc(r.release)}</span>: ${r.files.map(f=>esc(f.name)).join(', ')}</div>`:`<div class="note bad"><b>${FL[r.format]||r.format}</b> failed: ${esc(r.error)}</div>${r.password_for?pwAsk(r.password_for,id):''}`).join('')+(j.results.some(r=>r.ok)?`<button onclick="openReleases('${id}')">View in Releases &rarr;</button>`:'');
   await loadAll()})}catch(e){$('#res').innerHTML=`<div class="note bad">${esc(e.message)}</div>`;$('#bbtn').disabled=false}}
-async function releasesTab(p){$('#content').innerHTML=`<div class="wrap"><h1>Releases</h1><div id="rl"></div><div class="note"><b>Where does a .deb go?</b> Once installed it lives in <span class="mono">/opt/${esc(p.id)}</span> with the command <span class="mono">${esc(p.id)}</span>${p.launcher!==false?' and an entry in your app menu':''}. List its files: <span class="mono">dpkg -L ${esc(p.id)}</span>. Remove it: <span class="mono">sudo apt remove ${esc(p.id)}</span>.</div></div>`;const rs=await api('GET','/api/library?project='+p.id);$('#rl').innerHTML=relTable(rs)}
 
 /* ---------- library ---------- */
 let hostOs='linux';
 function relTable(rs){if(!rs.length)return'<div class="empty">Nothing saved yet. Build an installer and it will appear here.</div>';
- return `<table><tr><th>Version</th><th>Build</th><th>Date</th><th>Files</th></tr>${rs.map(r=>`<tr><td class="mono">${esc(r.version)}</td><td class="mono">${esc(r.release)}</td><td>${new Date(r.time*1000).toLocaleString()}</td><td>${r.files.map(f=>`<div><a href="/api/library/${r.project}/${encodeURIComponent(r.version)}/${r.release}/${encodeURIComponent(f.name)}">${esc(f.name)}</a> <span class="mute">${sz(f.size)}</span> <a href="#" onclick="saveAs(event,'${r.project}','${esc(r.version)}','${r.release}','${esc(f.name)}')">copy to folder&hellip;</a>${f.name.endsWith('.deb')&&hostOs==='linux'?` &middot; <a href="#" onclick="installDeb(event,'${r.project}','${esc(r.version)}','${r.release}','${esc(f.name)}')">install on this computer</a> &middot; <a href="#" onclick="removeDeb(event,'${r.project}')">remove</a>`:''}</div>`).join('')}</td></tr>`).join('')}</table>`}
-async function libraryView(){tabs([['l','Backup library']],'l','');$('#content').innerHTML='<div class="wrap"><h1>Backup library</h1><p class="lead">Every finished installer, filed by project, then version, then build. Nothing is ever overwritten.</p><div id="ll"></div></div>';
+ return `<table><tr><th>Version</th><th>Build</th><th>Date</th><th>Files</th></tr>${rs.map(r=>`<tr><td class="mono">${esc(r.version)}</td><td class="mono">${esc(r.release)}<div>${(r.signed||[]).map(x=>`<span class="chip ok">${esc(SIGNLBL[x]||x)}</span>`).join(' ')||'<span class="chip">unsigned</span>'}</div><a href="#" onclick="verifyDlg(event,'${r.project}','${esc(r.version)}','${r.release}')">how to check</a> &middot; <a href="#" onclick="ghVerify(event,'${r.project}','${esc(r.version)}','${r.release}')">verify against GitHub</a></td><td>${new Date(r.time*1000).toLocaleString()}</td><td>${r.files.map(f=>`<div><a href="/api/library/${r.project}/${encodeURIComponent(r.version)}/${r.release}/${encodeURIComponent(f.name)}">${esc(f.name)}</a> <span class="mute">${sz(f.size)}</span> <a href="#" onclick="saveAs(event,'${r.project}','${esc(r.version)}','${r.release}','${esc(f.name)}')">copy to folder&hellip;</a>${f.name.endsWith('.deb')&&hostOs==='linux'&&(r.note!=='pi'||f.name.endsWith('_all.deb'))?` &middot; <a href="#" onclick="installDeb(event,'${r.project}','${esc(r.version)}','${r.release}','${esc(f.name)}')">install on this computer</a> &middot; <a href="#" onclick="removeDeb(event,'${r.project}','${esc(r.version)}','${r.release}','${esc(f.name)}')">remove</a>`:''}</div>`).join('')}</td></tr>`).join('')}</table>`}
+const SIGNLBL={gpg:'GnuPG signed',authenticode:'Windows signed',macos:'macOS signed',notarized:'notarised'};
+async function ghVerify(e,pid,ver,rel){e.preventDefault();dlg('<h1 style="font-size:16px">Verify against GitHub</h1><p class="lead">Asking GitHub...</p>');
+ try{const r=await api('POST','/api/library/verify',{project:pid,version:ver,release:rel});
+  dlg(`<h1 style="font-size:16px">Verify against GitHub</h1><p class="lead mono" style="font-size:12px">${esc(r.repo)} &middot; release ${esc(r.tag)}</p>
+  ${r.ok?'<div class="note ok"><b>&#10003; Match.</b> These files are exactly the ones published on GitHub.</div>':'<div class="note bad"><b>&#10007; Not verified.</b> At least one file is different from, or missing on, GitHub. Do not hand these files out until you know why.</div>'}
+  <table>${r.files.map(f=>`<tr><td class="mono">${esc(f.name)}</td><td class="${f.status==='ok'?'ok':'bad'}">${f.status==='ok'?'&#10003; same as GitHub':f.status==='differs'?'&#10007; DIFFERENT from GitHub':'&#10007; not published on GitHub'}</td></tr>`).join('')}</table>
+  <p class="help">This proves the files match what is published on that GitHub repository. It is as trustworthy as that repository, so keep your GitHub account safe. GnuPG signing adds proof that you made them.</p><div class="sw"><button onclick="closeDlg()">Close</button></div>`)
+ }catch(x){dlg(`<h1 style="font-size:16px">Verify against GitHub</h1><div class="note bad">${esc(x.message)}</div><div class="sw"><button onclick="closeDlg()">Close</button></div>`)}}
+async function verifyDlg(e,pid,ver,rel){e.preventDefault();const r=(await api('GET','/api/library?project='+pid)).find(x=>x.version===ver&&x.release===rel);if(!r)return;
+ const has=n=>r.files.some(f=>f.name===n),f0=(r.files.find(f=>/\.(deb|exe|pkg|msi)$/.test(f.name))||{}).name||'FILE',s=r.signed||[];
+ dlg(`<h1 style="font-size:16px">Check this download</h1><p class="lead">Anyone who gets these files can check they are the originals and were not changed.</p>
+ ${has('verify.py')?'<p><b>Easiest:</b> put <span class="mono">verify.py</span> and the installer in one folder and run <span class="mono">python3 verify.py</span>. It checks the files against the originals published on GitHub.</p>':''}
+ <p><b>1. Check the file is unchanged</b> (put the files in one folder):</p>
+ <div class="code">Linux / macOS:  sha256sum -c SHA256SUMS --ignore-missing\nWindows (PowerShell):  Get-FileHash ${esc(f0)} -Algorithm SHA256   (compare with SHA256SUMS)</div>
+ ${has('SHA256SUMS.asc')?`<p><b>2. Check the checksums really come from the publisher</b> (GnuPG):</p><div class="code">gpg --import PUBLIC-KEY.asc\ngpg --verify SHA256SUMS.asc SHA256SUMS</div><p class="help">Ask the publisher for the key fingerprint through a second channel (their GitHub page) and compare it with the one gpg shows.</p>`:''}
+ ${s.includes('authenticode')?'<p><b>2. Windows signature:</b> right-click the .exe, Properties, Digital Signatures.</p>':''}
+ ${s.includes('macos')?'<p><b>2. macOS signature:</b> <span class="mono">pkgutil --check-signature '+esc(f0)+'</span></p>':''}
+ ${s.length?'':'<p class="help">This release is not signed, so only step 1 is possible. Switch signing on under Licensing &amp; Signing before the next build.</p>'}
+ <div class="sw"><button onclick="closeDlg()">Close</button></div>`)}
+function pwAsk(fmt,id){const win=fmt==='exe';
+ return `<div class="note warn"><b>Your ${win?'certificate file':'signing key'} is locked with a password. Please type it.</b>
+ <p style="margin:6px 0">${win?'It is the password you chose when you exported the certificate (.pfx) file, or that your certificate authority gave you when you downloaded it.':'It is the <b>new password you made up</b> when you created this key (on the Signing page, or in GnuPG). It is not a password from any website or account. If you forgot it, create a new key on the Signing page.'}</p>
+ <div class="row"><input type="password" id="pwask" placeholder="password" onkeydown="if(event.key==='Enter')pwBuild('${fmt}','${id}')"><button class="primary" onclick="pwBuild('${fmt}','${id}')">Unlock and build again</button></div>
+ <div class="help">Kept in memory only until you stop Vundu Studio. Never saved, never shown in the Output.</div></div>`}
+async function pwBuild(fmt,id){const pw=$('#pwask').value;if(!pw)return;try{await api('POST','/api/signing/unlock',{format:fmt,password:pw});build(id)}catch(e){alert(e.message)}}
+function openReleases(id){S.ltab='releases';S.lproj=id;go('library')}
+function setLTab(t){S.ltab=t;libraryView()}
+function libraryView(){tabs([['releases','Releases'],['backups','Backups']],S.ltab,'setLTab');return S.ltab==='backups'?backupsTab():releasesTab()}
+async function releasesTab(){
+ if(!S.projects.length){$('#content').innerHTML='<div class="wrap"><h1>Releases</h1><div class="empty">No projects yet.</div></div>';return}
+ const p=S.projects.find(x=>x.id===S.lproj)||S.projects.find(x=>x.id===S.cur)||S.projects[0];S.lproj=p.id;
+ $('#content').innerHTML=`<div class="wrap"><h1>Releases</h1><p class="lead">The installers built for one project.</p><label class="f">Project</label><select id="l-proj" onchange="S.lproj=this.value;releasesTab()">${S.projects.map(x=>`<option value="${esc(x.id)}" ${x.id===p.id?'selected':''}>${esc(x.name)}</option>`).join('')}</select><div id="rl" style="margin-top:12px"></div><div class="note"><b>Where does a .deb go?</b> Once installed it lives in <span class="mono">/opt/${esc(p.package)}</span> with the command <span class="mono">${esc(p.package)}</span>${p.launcher!==false?' and an entry in your app menu':''}. List its files: <span class="mono">dpkg -L ${esc(p.package)}</span>. Remove it: <span class="mono">sudo apt remove ${esc(p.package)}</span>.</div></div>`;
+ const rs=await api('GET','/api/library?project='+p.id);if($('#rl'))$('#rl').innerHTML=relTable(rs)}
+async function backupsTab(){$('#content').innerHTML='<div class="wrap"><h1>Backups</h1><p class="lead">Every finished installer, filed by project, then version, then build. Nothing is ever overwritten.</p><div id="ll"></div></div>';
  const rs=await api('GET','/api/library');const by={};rs.forEach(r=>(by[r.project]??=[]).push(r));
  $('#ll').innerHTML=Object.keys(by).length?Object.values(by).map(l=>`<h2>${esc(l[0].name)}</h2>${relTable(l)}`).join(''):relTable([])}
 async function installDeb(e,pid,ver,rel,file){e.preventDefault();try{const {job}=await api('POST','/api/library/install',{project:pid,version:ver,release:rel,file});
- watch(job,'Output - install',j=>{const ok=j.results[0]&&j.results[0].ok;alert(ok?`Installed. Open the app menu (press the Super key) and search for it. Command: ${pid}\nTo remove it later, use "remove" here or: sudo apt remove ${pid}`:'Install did not finish. See the Output panel.')})}catch(x){alert(x.message)}}
-async function removeDeb(e,pid){e.preventDefault();if(!confirm('Remove "'+pid+'" from this computer? (Your saved .deb stays in the library.)'))return;
- try{const {job}=await api('POST','/api/library/uninstall',{project:pid});watch(job,'Output - remove',j=>{const ok=j.results[0]&&j.results[0].ok;alert(ok?'Removed.':'Remove did not finish. See the Output panel.')})}catch(x){alert(x.message)}}
+ watch(job,'Output - install',j=>{const ok=j.results[0]&&j.results[0].ok;alert(ok?`Installed. Open the app menu (press the Super key) and search for it. See the Output panel for the package name.\nTo remove it later, use "remove" here.`:'Install did not finish. See the Output panel.')})}catch(x){alert(x.message)}}
+async function removeDeb(e,pid,ver,rel,file){e.preventDefault();if(!confirm('Remove the package in "'+file+'" from this computer? (Your saved .deb stays in the library.)'))return;
+ try{const {job}=await api('POST','/api/library/uninstall',{project:pid,version:ver,release:rel,file});watch(job,'Output - remove',j=>{const ok=j.results[0]&&j.results[0].ok;alert(ok?'Removed.':'Remove did not finish. See the Output panel.')})}catch(x){alert(x.message)}}
 async function saveAs(e,pid,ver,rel,file){e.preventDefault();const d=prompt('Copy into which folder?','~/Downloads');if(!d)return;try{const r=await api('POST','/api/library/save',{project:pid,version:ver,release:rel,file,dest_dir:d});alert('Copied to '+r.saved_to)}catch(x){alert(x.message)}}
 
 /* ---------- build machines ---------- */
 async function machinesView(){tabs([['m','Build machines']],'m','');
  const [m,tg]=await Promise.all([api('GET','/api/machines/local'),api('GET','/api/targets')]);S.machine=m;S.targets=tg;
- const here=m.os,others=['linux','windows','macos'].filter(x=>x!==here);const nm={linux:'Linux (.deb)',windows:'Windows (.exe)',macos:'macOS (.pkg)'};
- $('#content').innerHTML=`<div class="wrap"><h1>Build machines</h1><p class="lead">An installer has to be built on the same kind of computer it is for. Your computer builds for itself automatically. For the others, connect a second computer or virtual machine.</p>
+ const here=m.os,others=[...['linux','windows','macos'].filter(x=>x!==here),'pi'];const nm={linux:'Linux (.deb)',windows:'Windows (.exe)',macos:'macOS (.pkg)',pi:'Raspberry Pi OS (.deb)'};
+ $('#content').innerHTML=`<div class="wrap"><h1>Build machines</h1><p class="lead">An installer has to be built on the same kind of computer it is for. Your computer builds for itself automatically. For the others, connect a second computer or virtual machine. When your machines are ready, go to <a href="#" onclick="go('build');return false">Build</a>.</p>
  <div class="card"><div class="row"><div><b>This computer</b> <span class="chip ok">builds ${nm[here]} automatically</span></div></div>
  <dl class="kv" style="margin-top:10px"><dt>System</dt><dd>${esc(m.system)} (${esc(m.arch)})</dd><dt>User</dt><dd>${esc(m.user)}</dd><dt>Host name</dt><dd>${esc(m.hostname)}</dd><dt>Address</dt><dd>${esc(m.ip)}</dd><dt>SSH port</dt><dd>${m.ssh_port} ${m.ssh_running?'<span class="ok">(SSH server running)</span>':'<span class="mute">(no SSH server running - not needed for local builds)</span>'}</dd></dl>
  <div class="help">Nothing to configure here. These details were found automatically.</div></div>
@@ -204,6 +256,7 @@ async function machinesView(){tabs([['m','Build machines']],'m','');
 function remoteCard(os,label,m,t){const ok=t.mode==='ssh';const u=t.user||m.user;const id='r-'+os;
  const hosts=m.ssh_hosts.map(h=>`<option value="${esc(h.host)}">${esc(h.alias)}</option>`).join('');
  const help=os==='macos'?`<p>A Mac is needed to build <span class="mono">.pkg</span> files. Use a Mac you own, or a rented cloud Mac such as <a href="https://www.macincloud.com" target="_blank" rel="noopener">MacinCloud</a>. After signing up they give you a server address, a user name and a way to log in over SSH. Type those below.</p>`:
+ os==='pi'?`<p>A Raspberry Pi is <b>only needed for Python and C/C++ (CMake) projects</b>, which must be built by the same kind of processor they will run on. Node.js apps (any Pi) and Electron apps (64-bit Pi) are built on this computer without it. On the Pi (Raspberry Pi OS Trixie): turn on SSH (<span class="mono">sudo raspi-config</span> &rarr; Interface Options &rarr; SSH), then run <span class="mono">sudo apt install python3 python3-venv build-essential cmake dpkg-dev fakeroot</span>.</p>`:os==='linux'?`<p>Use a Linux (Ubuntu or Debian) computer with an SSH server and the build tools for your project type.</p>`:
  `<p>Use a Windows PC or virtual machine (VirtualBox, VMware, Hyper-V). On it, turn on <b>OpenSSH Server</b> (Settings &rarr; System &rarr; Optional features), then install Git for Windows and Node.js and/or Python. Type its address and your Windows user name below.</p>`;
  return `<div class="card"><div class="row"><div><b>${label}</b> ${ok?`<span class="chip ok">connected: ${esc(t.user)}@${esc(t.host)}</span>`:'<span class="chip warn">not connected</span>'}</div><button onclick="document.getElementById('${id}').open=!document.getElementById('${id}').open">${ok?'Edit':'Connect'}</button></div>
  <details id="${id}" ${ok?"":"open"}><summary style="display:none"></summary>${help}
@@ -250,6 +303,56 @@ function createVmDlg(){dlg(`<h1 style="font-size:16px">Create a Windows virtual 
 async function createVm(){const b={name:$('#cv-name').value,iso:$('#cv-iso').value,ostype:$('#cv-os').value,user:$('#cv-user').value,memory:+$('#cv-mem').value,cpus:+$('#cv-cpu').value,disk:+$('#cv-disk').value};closeDlg();
  try{const {job}=await api('POST','/api/vbox/create',b);watch(job,'Output - create VM',async()=>{await machinesView()})}catch(e){alert(e.message)}}
 
+/* ---------- licensing & signing ---------- */
+const sgv=(f,k)=>S.signing.settings[f][k];
+const sgin=(f,k,l,ph,h)=>`<label class="f">${l}</label><input id="sg-${f}-${k}" value="${esc(sgv(f,k))}" placeholder="${esc(ph||'')}">${h?`<div class="help">${h}</div>`:''}`;
+function sgHead(f,title,os,tool,where,toolOk,fix){const on=sgv(f,'enabled');
+ return `<div class="row"><div><span class="chip" style="font-weight:700;color:var(--ink)">${os}</span> <b style="font-size:15px">${title}</b></div><span class="chip ${on?'ok':'warn'}" style="flex:none">${on?'Signing ON':'Signing off'}</span></div>
+ <div class="help" style="margin:6px 0 2px">Signed with <b>${tool}</b> &middot; ${where} &middot; ${toolOk?'<span class="ok">installed</span>':`<span class="bad">missing</span> ${fix}`}</div>`}
+function sgSave(f){return `<div class="sw"><label class="tick" style="margin:0"><input type="checkbox" id="sg-${f}-enabled" ${sgv(f,'enabled')?'checked':''}><b>Sign every build of this type</b></label><button class="primary" onclick="sgSaveCard('${f}')">Save</button><span id="sg-${f}-msg"></span></div>`}
+function gpgCard(f,title,os,extra){const t=S.signing.tools.gpg,ks=S.signing.keys,cur=sgv(f,'key');
+ return `<div class="card">${sgHead(f,title,os,'GnuPG','signs on this computer',t,`<a href="#" onclick="go('setup');return false">Install in Setup</a>`)}
+ <p class="help">${extra}</p>
+ <label class="f">Your signing key</label><div class="row"><select id="sg-${f}-key"><option value="">(choose a key)</option>${ks.map(k=>`<option value="${esc(k.fpr)}" ${k.fpr===cur?'selected':''}>${esc(k.uid)} &middot; ${esc(k.fpr.slice(-16))}</option>`).join('')}</select><button onclick="gpgDlg('${f}')" ${t?'':'disabled'}>Create a key for me</button></div>
+ <div class="help">No password to enter here. If your key has one, Vundu asks for it at the moment a build needs it.</div>${sgSave(f)}</div>`}
+function signingView(){tabs([['s','Licensing & Signing']],'s','');const sg=S.signing,m=S.targets.macos,mt=m.mode==='local'?'this Mac':m.mode==='ssh'?esc(m.user)+'@'+esc(m.host):'your Mac (not connected yet)';
+ $('#content').innerHTML=`<div class="wrap"><h1>Licensing &amp; Signing</h1><p class="lead">Signing proves a package really came from you and has not been changed. Set it up once here: choose your <a href="#" onclick="go('machines');return false">machines</a> first, then set signing for each kind of installer below, then go to <a href="#" onclick="go('build');return false">Build</a>. If signing is switched on and fails, the build fails, so you never get an unsigned package by accident.</p>
+ ${gpgCard('deb','Ubuntu / Debian','.deb','Linux has no "trusted publisher" pop-up. Instead, each release gets a signed checksum list (<span class="mono">SHA256SUMS.asc</span>) and your public key, which people check with GnuPG.')}
+ ${gpgCard('pi','Raspberry Pi OS (Trixie)','.deb &middot; Raspberry Pi','Raspberry Pi OS is Debian, so it uses exactly the same GnuPG signing as Ubuntu. You can use the same key. The signing happens on this computer, whichever machine built the package.')}
+ <div class="card">${sgHead('exe','Windows','.exe','osslsigncode','signs on this computer, no Windows machine needed',sg.tools.osslsigncode,`<a href="#" onclick="go('setup');return false">Install in Setup</a>`)}
+  <p class="help">Needs a code-signing certificate from a certificate authority. Without one, Windows shows "Unknown publisher". A self-made certificate does not remove that warning. Certificates that live on a hardware token are not supported yet.</p>
+  ${sgin('exe','cert','Certificate file (.pfx / .p12, or a PEM certificate)','/home/you/certs/codesign.pfx')}
+  ${sgin('exe','privkey','Private key file (only if the certificate is PEM; leave empty for .pfx)','')}
+  ${sgin('exe','timestamp','Timestamp server','http://timestamp.digicert.com','Keeps the signature valid after the certificate expires. Leave empty to skip.')}
+  <div class="help">No password to enter here. If the certificate file has one (the one you chose when you exported it, or that your certificate authority gave you), Vundu asks for it when a build needs it.</div>${sgSave('exe')}</div>
+ <div class="card">${sgHead('pkg','macOS','.pkg','txoof/codesign (pycodesign.py)','signs on '+mt,true,'')}
+  <p class="help">Needs a paid Apple Developer account ($99 a year) with a <i>Developer ID Application</i> and a <i>Developer ID Installer</i> certificate in the Mac's keychain. It covers Python and Node.js projects. Not tested by the developers on a real Mac yet.</p>
+  <details><summary>One-time setup on the Mac</summary><div class="code">curl -LO https://github.com/txoof/codesign/raw/main/pycodesign.tgz\ntar xzf pycodesign.tgz && chmod +x pycodesign.py\nsudo mv pycodesign.py /usr/local/bin/\nsecurity find-identity -p basic -v          # shows the names and hashes to use below\nxcrun notarytool store-credentials MyProfile --apple-id YOU --team-id TEAMID</div>
+  <div class="help">The Mac's login keychain must be unlocked while building (log in at the Mac).</div></details>
+  ${sgin('pkg','app_id','Developer ID Application (hash or Team ID)','ABCDE12345','One word, from the find-identity list.')}
+  ${sgin('pkg','installer_id','Developer ID Installer (hash or Team ID)','ABCDE12345')}
+  <div class="tick"><input type="checkbox" id="sg-pkg-notarize" ${sgv('pkg','notarize')?'checked':''}><b>Also notarise with Apple</b></div>
+  ${sgin('pkg','notary_profile','Notarisation profile name','MyProfile','The name you gave to store-credentials. Needed only when notarising.')}
+  ${sgin('pkg','bundle_prefix','Bundle id prefix','com.yourname','Your package id becomes prefix.projectname')}
+  ${sgin('pkg','tool','pycodesign path on the Mac','pycodesign.py','Leave as is if it is on the Mac\'s PATH.')}
+  ${sgSave('pkg')}</div>
+ <div class="card"><div class="row"><div><span class="chip" style="font-weight:700;color:var(--ink)">All</span> <b style="font-size:15px">Licence and checking your downloads</b></div><span class="chip ok" style="flex:none">always on</span></div>
+  <p class="help" style="margin-top:8px">Vundu Studio is free software under the <b>MIT licence</b>. So that people can be sure a package is the original one:</p>
+  <ul style="margin:6px 0;padding-left:20px"><li>Every build gets a <span class="mono">SHA256SUMS</span> file listing the fingerprint of each installer.</li>
+  <li>If you use GnuPG signing, the release also gets <span class="mono">SHA256SUMS.asc</span> and <span class="mono">PUBLIC-KEY.asc</span>.</li>
+  <li>Your project's <span class="mono">LICENSE</span> file is installed inside every .deb at <span class="mono">/usr/share/doc/&lt;name&gt;/copyright</span>.</li></ul>
+  <p class="help"><b>To publish:</b> on your GitHub release, attach the installers plus <span class="mono">SHA256SUMS</span> (and the two GnuPG files). Download them from the Library, Releases tab. The <i>how to check</i> link there shows people the commands.</p>
+  <p class="help"><b>GitHub check:</b> add your repository on each project's Overview page. Then every release gets a <b>verify against GitHub</b> button here and a <span class="mono">verify.py</span> your users can run.</p></div></div>`}
+async function sgSaveCard(f){const msg=$('#sg-'+f+'-msg');const b={enabled:$('#sg-'+f+'-enabled').checked};
+ document.querySelectorAll(`[id^="sg-${f}-"]`).forEach(e=>{const k=e.id.slice(('sg-'+f+'-').length);if(['enabled','msg','pw'].includes(k))return;b[k]=e.type==='checkbox'?e.checked:e.value});
+ try{S.signing=await api('PUT','/api/signing',{[f]:b});msg.innerHTML='<span class="ok">Saved</span>';signingView()}catch(e){msg.innerHTML=`<span class="bad">${esc(e.message)}</span>`}}
+function gpgDlg(f){dlg(`<h1 style="font-size:16px">Create a signing key</h1><p class="lead">Makes a GnuPG key (ed25519, valid for 3 years) for signing your packages. Your name and e-mail are shown to people who check a download.</p>
+ <label class="f">Your name</label><input id="gk-name"><label class="f">E-mail</label><input id="gk-email"><label class="f">New password for this key (optional)</label><input type="password" id="gk-pw">
+ <div class="note warn"><b>Make up a brand-new password now.</b> It is not a password from any website, account or other program: you invent it here, just for this key. Write it down somewhere safe, because it <b>cannot be recovered</b>. Vundu will ask you for it when a build needs to sign. Leave it empty for a key with no password (simpler, but then anyone who copies the key can sign as you).</div>
+ <div class="sw"><button class="primary" onclick="gpgMake('${f}')">Create key</button><button onclick="closeDlg()">Cancel</button><span id="gk-msg"></span></div>`)}
+async function gpgMake(f){$('#gk-msg').textContent='Creating...';try{const r=await api('POST','/api/signing/gpgkey',{name:$('#gk-name').value,email:$('#gk-email').value,password:$('#gk-pw').value});
+ S.signing=r;closeDlg();await api('PUT','/api/signing',{[f]:{key:r.key.fpr}});S.signing=await api('GET','/api/signing');signingView()}catch(e){$('#gk-msg').innerHTML=`<span class="bad">${esc(e.message)}</span>`}}
+
 /* ---------- setup ---------- */
 async function setupView(){tabs([['s','Setup']],'s','');const s=await api('GET','/api/setup');S.setup=s;rail();
  const miss=s.items.filter(i=>!i.ok),rep=s.items.find(i=>i.id==='dpkg-repair'&&!i.ok);
@@ -269,6 +372,6 @@ async function browse(p){try{const d=await api('GET','/api/browse?path='+encodeU
 async function addProj(path){try{const r=await api('POST','/api/projects',{source:path});closeDlg();S.cur=r.project.id;S.view='projects';S.ptab='overview';await loadAll();
  if(r.detected.kind==='unknown')alert('Vundu could not recognise this project type. Supported: Node.js, Electron, Python and CMake.')}catch(e){alert(e.message)}}
 
-(async()=>{paintTheme();const i=await api('GET','/api/info');hostOs=i.host_os;$('#ver').textContent='v'+i.version;$('#st-ver').textContent='Vundu Studio '+i.version;$('#st-data').textContent=i.data_dir;const h=(location.hash||'').replace('#','').split('&')[0].split('/');if(h[0]==='project'&&h[1]){S.cur=h[1];S.ptab=h[2]||'overview'}else if(['library','machines','setup'].includes(h[0]))S.view=h[0];
+(async()=>{paintTheme();const i=await api('GET','/api/info');hostOs=i.host_os;$('#ver').textContent='v'+i.version;$('#st-ver').textContent='Vundu Studio '+i.version;$('#st-data').textContent=i.data_dir;const h=(location.hash||'').replace('#','').split('&')[0].split('/');if(h[0]==='project'&&h[1]){S.cur=h[1];S.ptab=h[2]||'overview'}else if(['library','machines','signing','build','setup'].includes(h[0]))S.view=h[0];
  await loadAll()})();
 </script></body></html>

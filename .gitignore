@@ -2,3 +2,16 @@ __pycache__/
 *.pyc
 .vundu-studio/
 *.zip
+
+# never commit signing keys, certificates or secrets
+*.pfx
+*.p12
+*.pem
+*.key
+*.gpg
+.env
+
+# build output and editor files
+vundu-out/
+.vscode/
+.idea/

@@ -4,6 +4,112 @@ All notable changes to Vundu Studio are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 the project uses [Semantic Versioning](https://semver.org/).
 
+Versions 0.0.1 to 0.0.5 were private development builds, made before this
+repository existed. 0.0.6 is the first version published here.
+
+## [0.0.6] - 2026-11-24
+
+### Added
+- **Licensing & Signing page** in the left menu, between Machines and Build, with a clearly marked card for
+  Ubuntu / Debian `.deb`, Raspberry Pi OS `.deb`, Windows `.exe` and macOS `.pkg`.
+  - **GnuPG** signs the checksum list of `.deb` releases (Ubuntu and Raspberry Pi OS), with a button to create a key.
+  - **osslsigncode** Authenticode-signs Windows `.exe`/`.msi` installers on this computer, with a timestamp
+    server (`.pfx`, or PEM certificate and key).
+  - **txoof/codesign** signs, packages and (optionally) notarises macOS `.pkg` files on the Mac build machine
+    (Python and Node.js projects).
+  - Passwords are kept in memory only and never saved, logged or put on a command line.
+  - If signing is switched on and fails, the build fails.
+- **Every release now has a `SHA256SUMS` file**, and signed releases also `SHA256SUMS.asc` and `PUBLIC-KEY.asc`.
+  The Library shows what each release is signed with, and a **how to check** link shows the commands.
+- The project's `LICENSE` file is installed inside `.deb` files at `/usr/share/doc/<package>/copyright`.
+- **GitHub verification.** Add a GitHub repository to a project (Overview page). Each release in the Library
+  then has a **verify against GitHub** link that compares the real files with the `SHA256SUMS` published on
+  that repository's release (tag `v` + version), with a tick or cross per file.
+- **`verify.py` for your users.** Each release of a project with a GitHub repository includes a ready-made,
+  standalone `verify.py` (Python 3 only) that checks downloaded files against the same GitHub release.
+  The template is `vundu/templates/verify.py` and can be used for any project.
+- GnuPG and osslsigncode are optional Setup components.
+- The Build page shows a **signed** / **not signed** mark next to each format.
+- Tests for checksums, signing settings, the macOS steps and a real GnuPG sign-and-verify round trip.
+
+### Changed
+- **Passwords are asked for only when a build needs them**, in a box on the Build page that says exactly
+  what the password is (for a GnuPG key: a brand-new password you made up when you created it, not one from
+  anywhere else). The always-visible password boxes and Unlock buttons are gone from the Signing page.
+- Menu order is now Projects, Library, Machines, Signing, Build, Setup.
+- A failed release (for example a signing error) no longer leaves a half-made folder in the Library.
+
+## [0.0.5] - 2026-11-24
+
+Raspberry Pi OS support, a reorganised menu, a new dark-mode colour, and fixes from a full code review of 0.0.4.
+
+### Added
+- **Raspberry Pi OS (Trixie) `.deb` builds.** Node.js apps are built on this computer as an
+  architecture-independent `.deb` (refused if they contain compiled `.node` add-ons). Electron apps are
+  cross-built for 64-bit Pi (arm64). Python and CMake projects are built natively on a Raspberry Pi
+  connected as a build machine over SSH, because they must be built by the same kind of processor.
+- A **Raspberry Pi** card on the Machines page, with setup instructions for the Pi.
+- `tests/test_core.py`: core checks, run with `python3 tests/test_core.py`.
+- Git version control.
+- A **Build** page in the left menu, under Machines: choose a project, see which machine builds each
+  format, and build.
+
+### Fixed
+- **A second copy deleted the first copy's builds.** Start-up now opens the port first and, if it is
+  taken, exits with a clear message without cleaning anything.
+- **Remove could uninstall the wrong package.** Install and Remove now read the real package name from
+  inside the `.deb` instead of guessing it from the project id (which differs after a rename or for
+  duplicate project names).
+- **Python builds on Windows/macOS build machines** failed because PyInstaller was never installed there,
+  and Windows has no `python3` command. Remote Python builds now create a venv in the build folder and
+  install PyInstaller (or Nuitka) into it.
+- **A failing `pip install -r requirements.txt` was hidden** and produced a broken program. It now fails
+  the build; only a missing `requirements.txt` is skipped.
+- **A failed build cleared "changed since last build".** The marker is now only updated when at least one
+  format was built.
+- **Two builds of the same project at once** destroyed each other's build folder. A second build is now
+  refused with a clear message.
+- **The "changed" marker flickered on very large folders** because a cut-short scan gave a random
+  fingerprint. Such folders now report "unknown" and show no marker.
+- **Slow project list.** The list no longer scans every folder before showing; sizes and markers fill
+  in from a background scan ("checking size...").
+- **Versions such as `../x` could write builds outside the library.** Versions are validated when saved,
+  when stored and when a library file is requested, and library paths are checked.
+- **Build numbers could collide** after a build folder was deleted by hand (the finished build was then
+  thrown away). The next number is now the highest existing one plus one.
+- **Symbolic links** in a project were followed when it was copied (loops, huge copies, failures). They
+  are now copied as links.
+- **Unquoted values in generated files.** The web address, start file and service user are validated or
+  shell-quoted, so a stray quote can no longer break the launcher or run extra commands.
+- The change check and the package now use one shared list of skipped folders. Previously edits in
+  `dist/`, `build/` or `out/` were packaged but never counted as changes.
+- An unknown project id now answers "no such project" instead of a Python error message.
+- The README was damaged (most sections below "Node.js servers" were empty) and described buttons that
+  no longer exist. It is rewritten.
+
+### Changed
+- **Menu order is now Projects, Library, Machines, Build, Setup.** The Build tab moved out of the project
+  page into its own page, so you choose your machines first and then build.
+- **Releases moved into the Library**, as the first tab, with Backups next to it (it was the project's
+  Releases tab). Releases has a project picker.
+- **Dark mode accent colour is now #FFC014** (buttons, links, tabs, status bar, highlights), with dark text
+  on it so it stays readable. Light mode is unchanged.
+- **Questions in build, setup and install steps stay answerable, and are now impossible to miss.** Every
+  job starts with a reminder. A question left half-written (for example `Ok to proceed? (y)`) is shown in
+  the Output panel as "WAITING FOR YOU", and 20 seconds without output prints a notice that says to click
+  the terminal window, type the answer (usually `y`) and press Enter.
+- The desktop launcher now opens a terminal window so there is somewhere to answer those questions.
+- The browser is opened without its start-up messages (for example snap/GTK warnings), and `BROWSER`
+  is honoured. Works with any Chromium-based browser.
+- `dist`, `build` and `out` folders in a project are packaged and tracked (use `.vunduignore` to leave
+  them out). `.cache` is no longer packaged.
+- The Releases notes and menu command use the real package name.
+- Command output reading is shared in one place (`jobs.stream`) instead of four copies.
+
+### Removed
+- Unused code: `detect.fingerprint`, a repeated host-OS check, unused imports, the unused job label and
+  an unused script argument.
+
 ## [0.0.4] - 2026-11-20
 
 ### Added
@@ -104,7 +210,4 @@ the project uses [Semantic Versioning](https://semver.org/).
   builds; rebuilds never overwrite earlier builds.
 - "Source changed since last build" indicator and "save as" copy-out.
 
-[0.0.4]: https://github.com/OWNER/vundu-studio/releases/tag/v0.0.4
-[0.0.3]: https://github.com/OWNER/vundu-studio/releases/tag/v0.0.3
-[0.0.2]: https://github.com/OWNER/vundu-studio/releases/tag/v0.0.2
-[0.0.1]: https://github.com/OWNER/vundu-studio/releases/tag/v0.0.1
+[0.0.6]: https://github.com/MindFarter/vundu-studio/releases/tag/v0.0.6

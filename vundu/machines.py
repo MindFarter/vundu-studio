@@ -4,7 +4,8 @@ import os
 import platform
 import socket
 import subprocess
-import sys
+
+from . import library as lib
 
 SSH_DIR = os.path.expanduser("~/.ssh")
 VUNDU_KEY = os.path.join(SSH_DIR, "id_ed25519_vundu")
@@ -93,7 +94,7 @@ def keys():
 def local_info():
     port, running = _ssh_port()
     return {
-        "os": "linux" if sys.platform.startswith("linux") else "macos" if sys.platform == "darwin" else "windows",
+        "os": lib.host_os(),
         "system": _distro(), "arch": platform.machine(), "user": getpass.getuser(),
         "hostname": socket.gethostname(), "ip": _ip(), "ssh_port": port, "ssh_running": running,
         "keys": keys(), "ssh_hosts": ssh_config_hosts(), "vundu_key": VUNDU_KEY,

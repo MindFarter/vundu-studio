@@ -12,7 +12,6 @@ import re
 import shutil
 import socket
 import subprocess
-import sys
 import time
 
 FORWARD_RULE = "vundu-ssh"
@@ -168,7 +167,7 @@ def create_vm(name, iso, ostype, mem_mb, cpus, disk_gb, log):
     return port
 
 
-def windows_guest_script(pubkey, host_url):
+def windows_guest_script(pubkey):
     """PowerShell to run once inside the Windows VM (as Administrator)."""
     key = pubkey.replace("'", "''")
     return f"""# Vundu Studio - one-time setup for this Windows build machine. Run in PowerShell as Administrator.

@@ -5,8 +5,12 @@ output is streamed to a file on disk (and saved with the release). Browsers ask
 for "lines since N" so each poll transfers only what is new. Finished jobs are
 pruned, keeping the most recent few.
 """
+import codecs
 import collections
 import os
+import queue
+import re
+import subprocess
 import threading
 import time
 import uuid
@@ -22,10 +26,9 @@ _lock = threading.Lock()
 
 
 class Job:
-    def __init__(self, project, label=""):
+    def __init__(self, project):
         self.id = uuid.uuid4().hex[:10]
         self.project = project
-        self.label = label
         self.lines = collections.deque(maxlen=MAX_LINES)
         self.total = 0
         self.done = False
@@ -71,8 +74,8 @@ class Job:
                     "dropped": max(0, base - since), "done": self.done, "results": self.results}
 
 
-def create(project, label=""):
-    j = Job(project, label)
+def create(project):
+    j = Job(project)
     with _lock:
         _jobs[j.id] = j
         finished = [k for k, v in _jobs.items() if v.done]
@@ -87,3 +90,51 @@ def create(project, label=""):
 
 def get(jid):
     return _jobs.get(jid)
+
+
+def running(project):
+    """True while a job for this project has not finished."""
+    return any(j.project == project and not j.done for j in list(_jobs.values()))
+
+
+KEY_HINT = ("NOTE: if this stops moving, a question may be waiting for you. Click the terminal window where you "
+            "started Vundu Studio, read the question, and press the key it asks for (usually y, then Enter).")
+
+
+def stream(cmd, log, **popen_kw):
+    """Run cmd, send its output to log line by line, return the exit code.
+
+    Output is read in chunks, so a half-written last line (a question waiting for a key press)
+    is shown after 1.5 seconds of quiet instead of staying hidden. Keyboard input is left
+    connected to the terminal on purpose: the person running Vundu answers the question there.
+    """
+    pr = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, **popen_kw)
+    q = queue.Queue()
+
+    def pump():
+        fd = pr.stdout.fileno()
+        while True:
+            chunk = os.read(fd, 4096)
+            q.put(chunk or None)
+            if not chunk:
+                return
+
+    threading.Thread(target=pump, daemon=True).start()
+    dec, buf = codecs.getincrementaldecoder("utf-8")("replace"), ""
+    while True:
+        try:
+            chunk = q.get(timeout=1.5)
+        except queue.Empty:
+            if buf.strip():
+                log(f'  >>> WAITING FOR YOU: "{buf.strip()}"  If this is a question: click the terminal window '
+                    f"where Vundu Studio was started, type your answer (for example y) and press Enter.")
+                buf = ""
+            continue
+        if chunk is None:
+            break
+        *lines, buf = re.split(r"\r\n|\n|\r", buf + dec.decode(chunk))
+        for line in lines:
+            log(line.rstrip())
+    if buf.strip():
+        log(buf.rstrip())
+    return pr.wait()

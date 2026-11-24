@@ -3,7 +3,10 @@ import json
 import os
 import re
 
-SKIP = {".git", "node_modules", "dist", "build", "__pycache__", ".venv", "venv", "out", ".cache"}
+# Folders left out of both the change check and the package. dist/build/out are NOT here: they are
+# often real source (compiled output) and are packaged, so edits there must count as changes.
+# Use a .vunduignore file to leave them out.
+SKIP = {".git", "node_modules", "__pycache__", ".venv", "venv", ".cache", "vundu-out", ".vundu"}
 ICON_NAMES = ("icon", "logo", "app-icon", "appicon")
 ICON_EXTS = (".png", ".ico", ".icns", ".svg")
 ICON_DIRS = ("", "assets", "build", "resources", "static", "images", "img", "icons")
@@ -115,11 +118,12 @@ def ignored(rel, pats):
 
 
 MAX_FILES = 40000
-MAX_SECONDS = 2.5
+MAX_SECONDS = 8
 
 
 def scan(root):
-    """One capped pass: change fingerprint, total size in bytes, and whether the scan was cut short."""
+    """One capped pass: change fingerprint, total size in bytes, and whether the scan was cut short.
+    A cut-short scan has no fingerprint (None): where it stops varies, so its hash would be random."""
     import hashlib
     import time
     h, total, n, cut = hashlib.sha256(), 0, 0, False
@@ -141,11 +145,7 @@ def scan(root):
         if n > MAX_FILES or time.time() - t0 > MAX_SECONDS:
             cut = True
             break
-    return {"fingerprint": h.hexdigest()[:16], "bytes": total, "files": n, "truncated": cut}
-
-
-def fingerprint(root):
-    return scan(root)["fingerprint"]
+    return {"fingerprint": None if cut else h.hexdigest()[:16], "bytes": total, "files": n, "truncated": cut}
 
 
 def guess_port(root, entry):

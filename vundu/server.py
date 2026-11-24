@@ -13,20 +13,17 @@ import traceback
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import unquote, urlparse, parse_qs
 
-from . import builders, detect, jobs, library as lib, machines, setup as tools, vbox
+from . import builders, detect, jobs, library as lib, machines, setup as tools, signing, vbox
 
-VERSION = "0.0.4"
+VERSION = "0.0.6"
 WEB = os.path.join(os.path.dirname(os.path.abspath(__file__)), "web")
 PORT = 8765
 _scan_cache = {}  # project id -> (time, scan result); avoids re-walking big folders on every refresh
+_scan_busy = set()  # project ids being scanned in the background right now
 _scan_lock = threading.Lock()
 
 
-def project_scan(p, force=False):
-    with _scan_lock:
-        hit = _scan_cache.get(p["id"])
-    if hit and not force and time.time() - hit[0] < 60:
-        return hit[1]
+def _scan_now(p):
     try:
         r = detect.scan(p["source"])
     except OSError:
@@ -36,30 +33,82 @@ def project_scan(p, force=False):
     return r
 
 
-def public_project(p):
-    sc = project_scan(p)
+def _scan_bg(p):
+    try:
+        _scan_now(p)
+    finally:
+        with _scan_lock:
+            _scan_busy.discard(p["id"])
+
+
+def project_scan(p, force=False, wait=True):
+    """Scan result for a project. wait=False never blocks: it returns the cached result (or None
+    if there is none yet) and refreshes it in the background, so a long project list stays fast."""
+    with _scan_lock:
+        hit = _scan_cache.get(p["id"])
+    fresh = bool(hit) and time.time() - hit[0] < 60
+    if wait and (force or not fresh):
+        return _scan_now(p)
+    if not fresh:
+        with _scan_lock:
+            start = p["id"] not in _scan_busy
+            _scan_busy.add(p["id"])
+        if start:
+            threading.Thread(target=_scan_bg, args=(p,), daemon=True).start()
+    return hit[1] if hit else None
+
+
+def public_project(p, wait=True):
+    sc = project_scan(p, wait=wait)
     q = dict(p)
-    q["changed_since_release"] = bool(p.get("last_fingerprint")) is False or p.get("last_fingerprint") != sc["fingerprint"]
-    q["size_mb"] = round(sc["bytes"] / 1e6, 1)
-    q["size_truncated"] = sc["truncated"]
+    q["scanning"] = sc is None
+    fp = sc and sc["fingerprint"]
+    # None = unknown (still scanning, or the folder is too big to check completely)
+    q["changed_since_release"] = (not p.get("last_fingerprint") or p["last_fingerprint"] != fp) if fp else None
+    q["size_mb"] = round(sc["bytes"] / 1e6, 1) if sc else None
+    q["size_truncated"] = bool(sc and sc["truncated"])
+    q["package"] = lib.slug(p["name"])  # the command / package name a .deb built from this project gets
     return q
+
+
+class NotFound(Exception):
+    pass
+
+
+def need_project(pid):
+    p = lib.get_project(pid)
+    if not p:
+        raise NotFound("no such project")
+    return p
+
+
+def deb_package(path):
+    """The package name written inside a .deb file (never guess it from the project name)."""
+    r = subprocess.run(["dpkg-deb", "-f", path, "Package"], capture_output=True, text=True)
+    name = r.stdout.strip()
+    if r.returncode != 0 or not re.fullmatch(r"[a-z0-9][a-z0-9+.-]+", name):
+        raise ValueError("Could not read the package name from that .deb file.")
+    return name
 
 
 def run_build(job, p, formats):
     try:
+        job.log(jobs.KEY_HINT)
         for fmt in formats:
             job.log(f"=== Building {fmt} for {p['name']} {p['version']} ===")
             try:
                 files = builders.build(p, fmt, job.log)
                 fp = project_scan(p, force=True)["fingerprint"]
-                rec = lib.store_release(p, files, fp, job.full_log(), engine_note=fmt)
+                rec = lib.store_release(p, files, fp, job.full_log(), engine_note=fmt, signed=signing.applied(p, fmt),
+                                        after=lambda rdir, fmt=fmt: signing.finish_release(p, fmt, rdir, job.log))
                 job.results.append({"format": fmt, "ok": True, "release": rec["release"], "files": rec["files"]})
                 job.log(f"Stored in library: {p['name']} / {p['version']} / {rec['release']}")
             except Exception as e:  # carry on with the other formats
-                job.results.append({"format": fmt, "ok": False, "error": str(e)})
+                job.results.append({"format": fmt, "ok": False, "error": str(e), "password_for": getattr(e, "fmt", None)})
                 job.log(f"ERROR: {e}")
-        p["last_fingerprint"] = project_scan(p, force=True)["fingerprint"]
-        lib.save_project(p)
+        if any(r["ok"] for r in job.results):  # a build that failed must not clear "changed since last build"
+            p["last_fingerprint"] = project_scan(p, force=True)["fingerprint"]
+            lib.save_project(p)
     except Exception:
         job.log(traceback.format_exc())
     finally:
@@ -69,6 +118,7 @@ def run_build(job, p, formats):
 
 def run_setup(job, ids):
     try:
+        job.log(jobs.KEY_HINT)
         res = tools.install(ids, job.log)
         job.results = [{"id": k, "status": v} for k, v in res.items()]
     except Exception:
@@ -85,11 +135,9 @@ def run_cmd(job, cmd, verify=None, label=""):
             job.log("  sudo " + " ".join(cmd))
             job.results.append({"ok": False, "error": "needs administrator rights"})
         else:
+            job.log(jobs.KEY_HINT)
             job.log("$ " + " ".join(pre + cmd))
-            pr = subprocess.Popen(pre + cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-            for line in pr.stdout:
-                job.log("  " + line.rstrip())
-            rc = pr.wait()
+            rc = jobs.stream(pre + cmd, lambda line: job.log("  " + line))
             ok = rc == 0 and (verify() if verify else True)
             job.results.append({"ok": ok, "error": "" if ok else f"exit code {rc}"})
             job.log(f"== {label} {'finished' if ok else 'FAILED'}")
@@ -194,7 +242,7 @@ class H(BaseHTTPRequestHandler):
             if path == "/guest/windows.ps1":
                 try:
                     machines.keygen()  # makes sure a key exists, then embeds its public half
-                    return self._text(vbox.windows_guest_script(machines.public_key(), ""))
+                    return self._text(vbox.windows_guest_script(machines.public_key()))
                 except Exception as e:  # never hand PowerShell an error blob to execute
                     msg = str(e).replace("'", "")
                     return self._text(f"Write-Host 'Vundu Studio could not prepare the setup script: {msg}. "
@@ -202,15 +250,14 @@ class H(BaseHTTPRequestHandler):
             if path == "/api/info":
                 return self._json({"version": VERSION, "data_dir": lib.DATA, "host_os": lib.host_os()})
             if path == "/api/projects":
-                return self._json([public_project(p) for p in lib.list_projects()])
+                return self._json([public_project(p, wait=False) for p in lib.list_projects()])
             m = re.fullmatch(r"/api/projects/([\w-]+)/icon", path)
             if m:
                 p = lib.get_project(m.group(1))
                 return self._file(lib.icon_path(p) if p else None)
             m = re.fullmatch(r"/api/projects/([\w-]+)", path)
             if m:
-                p = lib.get_project(m.group(1))
-                return self._json(public_project(p)) if p else self._err(404, "no such project")
+                return self._json(public_project(need_project(m.group(1))))
             if path == "/api/library":
                 return self._json(lib.list_releases(q.get("project", [None])[0]))
             m = re.fullmatch(r"/api/library/([\w-]+)/([^/]+)/([\w-]+)/(.+)", path)
@@ -225,6 +272,8 @@ class H(BaseHTTPRequestHandler):
                 return self._json(j.snapshot(int(q.get("since", ["0"])[0] or 0)))
             if path == "/api/targets":
                 return self._json(lib.get_targets())
+            if path == "/api/signing":
+                return self._json(signing.status())
             if path == "/api/setup":
                 return self._json(tools.status())
             if path == "/api/machines/local":
@@ -243,6 +292,8 @@ class H(BaseHTTPRequestHandler):
                 dirs = sorted(x for x in os.listdir(d) if os.path.isdir(os.path.join(d, x)) and not x.startswith("."))
                 return self._json({"path": d, "parent": os.path.dirname(d), "dirs": dirs})
             return self._err(404, "not found")
+        except NotFound as e:
+            return self._err(404, str(e))
         except Exception as e:
             return self._err(500, str(e))
 
@@ -260,8 +311,8 @@ class H(BaseHTTPRequestHandler):
             self._err(400, str(e))
             return None
 
-    def _start(self, target, *args, label="", project=""):
-        j = jobs.create(project, label)
+    def _start(self, target, *args, project=""):
+        j = jobs.create(project)
         threading.Thread(target=target, args=(j,) + args, daemon=True).start()
         return self._json({"job": j.id}, 202)
 
@@ -279,12 +330,12 @@ class H(BaseHTTPRequestHandler):
                 return self._json({"project": public_project(p), "detected": det}, 201)
             m = re.fullmatch(r"/api/projects/([\w-]+)/detect", path)
             if m:
-                p = lib.get_project(m.group(1))
+                p = need_project(m.group(1))
                 project_scan(p, force=True)
                 return self._json(detect.detect(p["source"]))
             m = re.fullmatch(r"/api/projects/([\w-]+)/icon", path)
             if m:
-                p = lib.get_project(m.group(1))
+                p = need_project(m.group(1))
                 data = b["data_url"].split(",", 1)[1]
                 ext = {"image/png": ".png", "image/x-icon": ".ico", "image/vnd.microsoft.icon": ".ico",
                        "image/svg+xml": ".svg"}.get(re.match(r"data:([^;,]+)", b["data_url"]).group(1), ".png")
@@ -295,10 +346,12 @@ class H(BaseHTTPRequestHandler):
                 return self._json(lib.save_project(p))
             m = re.fullmatch(r"/api/projects/([\w-]+)/build", path)
             if m:
-                p = lib.get_project(m.group(1))
+                p = need_project(m.group(1))
                 fmts = [f for f in b.get("formats", []) if f in builders.FORMATS]
                 if not fmts:
                     return self._err(400, "choose at least one format: deb, exe, pkg")
+                if jobs.running(p["id"]):
+                    return self._err(409, "A build of this project is already running. Wait for it to finish.")
                 return self._start(run_build, p, fmts, project=p["id"])
             if path == "/api/library/save":
                 src = lib.release_file(b["project"], b["version"], b["release"], b["file"])
@@ -311,14 +364,15 @@ class H(BaseHTTPRequestHandler):
                 src = lib.release_file(b["project"], b["version"], b["release"], b["file"])
                 if not src or not src.endswith(".deb") or lib.host_os() != "linux":
                     return self._err(400, "only .deb files can be installed here, and only on Linux")
-                name = lib.slug(b["project"])
+                name = deb_package(src)
                 return self._start(run_cmd, ["apt-get", "install", "-y", src],
                                    lambda: subprocess.run(["dpkg", "-s", name], capture_output=True).returncode == 0,
                                    "Install", project=name)
             if path == "/api/library/uninstall":
-                name = lib.slug(b["project"])
-                if lib.host_os() != "linux":
-                    return self._err(400, "only available on Linux")
+                src = lib.release_file(b["project"], b["version"], b["release"], b["file"])
+                if lib.host_os() != "linux" or not src or not src.endswith(".deb"):
+                    return self._err(400, "only .deb files from the library can be removed, and only on Linux")
+                name = deb_package(src)  # the name inside the file, so we never remove an unrelated package
                 return self._start(run_cmd, ["apt-get", "remove", "-y", name],
                                    lambda: subprocess.run(["dpkg", "-s", name], capture_output=True).returncode != 0,
                                    "Remove", project=name)
@@ -342,6 +396,17 @@ class H(BaseHTTPRequestHandler):
                 return self._json({"ok": True})
             if path == "/api/vbox/create":
                 return self._start(run_vbox_create, b, project="vbox")
+            if path == "/api/library/verify":
+                sums = lib.release_file(b["project"], b["version"], b["release"], "SHA256SUMS")
+                if not sums:
+                    return self._err(404, "This release has no SHA256SUMS file.")
+                return self._json(signing.github_check(need_project(b["project"]), b["version"], os.path.dirname(sums)))
+            if path == "/api/signing/unlock":
+                signing.unlock(b.get("format"), b.get("password") or "")
+                return self._json(signing.status())
+            if path == "/api/signing/gpgkey":
+                k = signing.create_key(str(b.get("name", "")).strip(), str(b.get("email", "")).strip(), b.get("password") or "")
+                return self._json({"key": k, **signing.status()}, 201)
             if path == "/api/setup/install":
                 known = {i["id"] for i in tools.status()["items"]}
                 ids = [i for i in (b.get("ids") or []) if i in known]
@@ -349,6 +414,8 @@ class H(BaseHTTPRequestHandler):
                     return self._err(400, "nothing to install")
                 return self._start(run_setup, ids, project="setup")
             return self._err(404, "not found")
+        except NotFound as e:
+            return self._err(404, str(e))
         except Exception as e:
             return self._err(400, str(e))
 
@@ -360,15 +427,30 @@ class H(BaseHTTPRequestHandler):
         try:
             m = re.fullmatch(r"/api/projects/([\w-]+)", path)
             if m:
-                p = lib.get_project(m.group(1))
+                p = need_project(m.group(1))
+                if "version" in b and not lib.valid_version(b["version"]):
+                    return self._err(400, "Version may only use letters, numbers and . + ~ - _ (for example 1.0.0).")
+                if b.get("launcher_url") and not lib.URL_RE.fullmatch(b["launcher_url"].strip()):
+                    return self._err(400, "The web address must look like http://localhost:3000 (no spaces or quotes).")
+                if b.get("service_user") and not lib.USER_RE.fullmatch(b["service_user"].strip()):
+                    return self._err(400, "The service user must be a normal user name, such as alex.")
+                if "github" in b:
+                    b["github"] = lib.normalize_repo(b["github"])
+                if "name" in b and not str(b["name"]).strip():
+                    return self._err(400, "The project name cannot be empty.")
                 for k in ("name", "version", "publisher", "description", "entry", "engine", "framework", "service",
-                          "service_user", "autostart", "launcher", "launcher_url"):
+                          "service_user", "autostart", "launcher", "launcher_url", "github"):
                     if k in b:
                         p[k] = (b[k] or None) if k in ("engine", "entry") else b[k]
                 return self._json(public_project(lib.save_project(p)))
             if path == "/api/targets":
                 return self._json(lib.save_targets(b))
+            if path == "/api/signing":
+                signing.save(b)
+                return self._json(signing.status())
             return self._err(404, "not found")
+        except NotFound as e:
+            return self._err(404, str(e))
         except Exception as e:
             return self._err(400, str(e))
 
@@ -378,19 +460,36 @@ class Server(ThreadingHTTPServer):
     block_on_close = False
 
 
+def open_browser(url):
+    """Open the default browser (Chrome, Chromium, Opera, Edge, Brave, Vivaldi, Firefox ...). Its own
+    start-up chatter (snap/GTK warnings) goes to /dev/null so it never buries Vundu's messages."""
+    try:
+        if sys.platform.startswith("linux") and shutil.which("xdg-open") and not os.environ.get("BROWSER"):
+            subprocess.Popen(["xdg-open", url], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                             stderr=subprocess.DEVNULL, start_new_session=True)
+        else:
+            __import__("webbrowser").open(url)
+    except Exception:
+        print(f"Could not open a browser. Open {url} yourself.")
+
+
 def main():
     global PORT
     lib.init()
     PORT = int(os.environ.get("VUNDU_PORT", PORT))
+    try:
+        srv = Server(("127.0.0.1", PORT), H)  # loopback only
+    except OSError as e:  # bind BEFORE cleaning up: a second copy must never wipe the running one's builds
+        sys.exit(f"Vundu Studio cannot start on port {PORT} ({e.strerror}). Is it already running? "
+                 f"Open http://127.0.0.1:{PORT}/ or choose another port with VUNDU_PORT=9000.")
     # leftovers from older sessions: build copies and job logs
     shutil.rmtree(lib.WORK, ignore_errors=True)
     os.makedirs(lib.WORK, exist_ok=True)
     shutil.rmtree(os.path.join(lib.DATA, "joblogs"), ignore_errors=True)
-    srv = Server(("127.0.0.1", PORT), H)  # loopback only
     url = f"http://127.0.0.1:{PORT}/"
     print(f"Vundu Studio {VERSION} running at {url}  (data: {lib.DATA})")
     if "--no-browser" not in sys.argv:
-        threading.Timer(0.6, lambda: __import__("webbrowser").open(url)).start()
+        threading.Timer(0.6, open_browser, args=(url,)).start()
     try:
         srv.serve_forever()
     except KeyboardInterrupt:
